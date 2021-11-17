@@ -200,7 +200,7 @@ services:
 #    hostname: gnb2
 #    depends_on:
 #      - mec-upf2
-#      - amf2
+#      - amf1
 #    build:
 #      context: ./ueransim
 #      target: ueransim-gnb
@@ -227,10 +227,10 @@ services:
 #      - LINK_IP=10.0.200.5
 #      - NGAP_IP=10.0.214.4
 #      - GTP_IP=10.0.201.4
-#      - AMF_IP=10.0.214.5
+#      - AMF_IP=10.0.214.3
 #      - SST_LIST=1
 #      - SD_LIST=0x010203
-#      - TAC=2
+#      - TAC=1
 #    networks:
 #      ran-net:
 #        ipv4_address: 10.0.200.5
@@ -251,13 +251,14 @@ services:
     image: free5gc-upf
     volumes:
       - ./config/upf-config.yaml:/etc/upfd/config.yaml:ro
+      - ./config/upf1-routing.sh:/usr/local/bin/routing.sh:ro
     command: -f /etc/upfd/config.yaml
     cap_add:
       - NET_ADMIN
     sysctls:
       - net.ipv4.ip_forward=1
     environment:
-      - routing=true
+      - routing=routing.sh
       - config_file=/etc/upfd/config.yaml
       - config_script=true
     networks:

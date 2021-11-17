@@ -10,5 +10,5 @@ configuration:
     - addr: 0.0.0.0
   dnn_list:
     - dnn: sliceA
-      cidr: 10.0.222.4/30
+      cidr: 10.0.222.0/24
 
