@@ -1,0 +1,27 @@
+# Mongo Configuration
+mongo:
+  name: free5gc
+  url: mongodb://mongodb-f5gc.db-net:27017
+
+# Mobile Country Code value of HPLMN
+mcc: "001"
+# Mobile Network Code value of HPLMN (2 or 3 digits)
+mnc: "01"
+# Permanent subscription key
+key: 8baf473f2f8fd09487cccbd7097c6862
+# Operator code (OP or OPC) of the UE
+op: 8e27b6af0e692e750f32667a3b14605d
+
+# List all the slices
+slices:
+  - sst: 01
+    sd: 010203
+    varqi: 9
+    dnn: sliceA
+
+# All IMSI of UEs
+imsi:
+  - imsi-001010000000000
+  - imsi-001010000000001
+  - imsi-001010000000002
+  - imsi-001010000000003

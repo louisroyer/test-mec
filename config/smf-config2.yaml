@@ -1,0 +1,97 @@
+info:
+  version: 1.0.2
+  description: SMF initial local configuration
+
+configuration:
+  smfName: SMF2
+  sbi:
+    scheme: http
+    registerIPv4: smf2.sbi-net # IP used to register to NRF
+    bindingIPv4: 10.0.211.17  # IP used to bind the service
+    port: 8000
+  serviceNameList:
+    - nsmf-pdusession
+    - nsmf-event-exposure
+    - nsmf-oam
+  snssaiInfos:
+    - sNssai:
+        sst: 1
+        sd: 010203
+      dnnInfos:
+        - dnn: sliceA
+          dns: 
+            ipv4: 8.8.8.8
+            ipv6: 2001:4860:4860::8888
+  pfcp:
+    addr: 10.0.210.6
+  userplane_information:
+    up_nodes:
+      gNB:
+        type: AN
+
+      upf-mec:
+        type: UPF
+        node_id: 10.0.210.5
+        sNssaiUpfInfos:
+          - sNssai:
+              sst: 1
+              sd: 010203
+            dnnUpfInfoList:
+              - dnn: sliceA
+                pools:
+                  - cidr: 10.0.222.4/30
+        interfaces:
+          - interfaceType: N3
+            endpoints:
+              - 10.0.201.5
+            networkInstance: sliceA
+          - interfaceType: N9
+            endpoints:
+              - 10.0.203.4
+            networkInstance: sliceA
+
+      upf:
+        type: UPF
+        node_id: 10.0.210.3
+        sNssaiUpfInfos:
+          - sNssai:
+              sst: 1
+              sd: 010203
+            dnnUpfInfoList:
+              - dnn: sliceA
+        interfaces:
+          - interfaceType: N9
+            endpoints:
+              - 10.0.203.3
+            networkInstance: sliceA
+    links:
+      - A: gNB
+        B: upf-mec
+      - A: upf-mec
+        B: upf
+  nrfUri: http://nrf.sbi-net:8000 
+  locality: loc2
+  ulcl: true
+
+logger:
+  SMF:
+    debugLevel: info
+    ReportCaller: false
+  NAS:
+    debugLevel: info
+    ReportCaller: false
+  NGAP:
+    debugLevel: info
+    ReportCaller: false
+  Aper:
+    debugLevel: info
+    ReportCaller: false
+  PathUtil:
+    debugLevel: info
+    ReportCaller: false
+  OpenApi:
+    debugLevel: info
+    ReportCaller: false
+  PFCP:
+    debugLevel: info
+    ReportCaller: false
