@@ -23,8 +23,6 @@ configuration:
       supportedSnssaiList: # Supported S-NSSAIs of the PLMN
         - sst: 1 # Slice/Service Type (uinteger, range: 0~255)
           sd: 010203 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
-        - sst: 1 # Slice/Service Type (uinteger, range: 0~255)
-          sd: 112233 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
   nsiList: # List of available Network Slice Instance (NSI)
     - snssai: # S-NSSAI of this NSI
         sst: 1 # Slice/Service Type (uinteger, range: 0~255)
@@ -33,13 +31,6 @@ configuration:
         # the NRF to be used to select the NFs/services within the selected NSI, and an optonal ID
         - nrfId: http://nrf.sbi-net:8000/nnrf-nfm/v1/nf-instances
           nsiId: 11
-    - snssai: # S-NSSAI of this NSI
-        sst: 1 # Slice/Service Type (uinteger, range: 0~255)
-        sd: 112233 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
-      nsiInformationList: # Information list of this NSI
-        # the NRF to be used to select the NFs/services within the selected NSI, and an optonal ID
-        - nrfId: http://nrf.sbi-net:8000/nnrf-nfm/v1/nf-instances
-          nsiId: 12
   amfSetList: # List of AMF Sets that my be assigned by this NSSF
     - amfSetId: 1 # the AMF Set identifier
       amfList: # Instance ID of the AMFs in this set
@@ -56,8 +47,6 @@ configuration:
           supportedSnssaiList: # Supported S-NSSAIs of the tracking area
             - sst: 1 # Slice/Service Type (uinteger, range: 0~255)
               sd: 010203 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
-            - sst: 1 # Slice/Service Type (uinteger, range: 0~255)
-              sd: 112233 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
   taList: # List of supported tracking area and their related information of this NSSF instance
     - tai: # Tracking Area Identity
         plmnId: # Public Land Mobile Network ID, <PLMN ID> = <MCC><MNC>
@@ -68,8 +57,6 @@ configuration:
       supportedSnssaiList: # List of supported S-NSSAIs of the tracking area
         - sst: 1 # Slice/Service Type (uinteger, range: 0~255)
           sd: 010203 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
-        - sst: 1 # Slice/Service Type (uinteger, range: 0~255)
-          sd: 112233 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
 
 # the kind of log output
   # debugLevel: how detailed to output, value: trace, debug, info, warn, error, fatal, panic
