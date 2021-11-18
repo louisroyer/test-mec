@@ -1,0 +1,18 @@
+$TTL    86400
+@   IN  SOA ns1.example. root.example. (
+            2014100801  ; Serial
+            43200       ; Refresh
+            3600        ; Retry
+            1209600     ; Expire
+            180 )       ; Minimum TTL
+
+; Nameservers
+    IN  NS  ns1.example.
+
+
+
+; Root site
+    IN  A   10.0.224.3
+
+; Hostname records
+*   IN  A   10.0.224.3

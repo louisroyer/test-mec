@@ -119,126 +119,6 @@ services:
       mec-net:
         ipv4_address: 10.0.201.2
 
-
-#  ue3:
-#    container_name: ue3
-#    hostname: ue3
-#    depends_on:
-#      - gnb2
-#    build:
-#      context: ./ueransim
-#      target: ueransim-ue
-#      args:
-#        IPERF2_RELEASE: 2-1-4
-#        UERANSIM_RELEASE: v3.2.4
-#        TSHARK_RELEASE: wireshark-3.4.6
-#        RLS_RELEASE: v1.1.1
-#    image: ueransim-ue
-#    cap_add:
-#      - NET_ADMIN
-#    devices:
-#      - "/dev/net/tun"
-#    command: -c /etc/ueransim/config.yaml
-#    volumes:
-#      - ./config/templates/config-ue.yaml:/etc/ueransim/config-template.yaml:ro
-#      - ./config/templates/scripts/config-ue.sh:/usr/local/bin/config.sh:ro
-#    environment:
-#      - sleep=10
-#      - config_script=config.sh
-#      - template=/etc/ueransim/config-template.yaml
-#      - config_file=/etc/ueransim/config.yaml
-#      - MCC=001
-#      - MNC=01
-#      - MSISDN=0000000002
-#      - APN_LIST=sliceA
-#      - SST_LIST=1
-#      - SD_LIST=0x010203
-#      - GNB=10.0.200.5
-#    networks:
-#      ran-net:
-#        ipv4_address: 10.0.200.6
-#  ue4:
-#    container_name: ue4
-#    hostname: ue4
-#    depends_on:
-#      - gnb2
-#    build:
-#      context: ./ueransim
-#      target: ueransim-ue
-#      args:
-#        IPERF2_RELEASE: 2-1-4
-#        UERANSIM_RELEASE: v3.2.4
-#        TSHARK_RELEASE: wireshark-3.4.6
-#        RLS_RELEASE: v1.1.1
-#    image: ueransim-ue
-#    cap_add:
-#      - NET_ADMIN
-#    devices:
-#      - "/dev/net/tun"
-#    command: -c /etc/ueransim/config.yaml
-#    volumes:
-#      - ./config/templates/config-ue.yaml:/etc/ueransim/config-template.yaml:ro
-#      - ./config/templates/scripts/config-ue.sh:/usr/local/bin/config.sh:ro
-#    environment:
-#      - sleep=10
-#      - config_script=config.sh
-#      - template=/etc/ueransim/config-template.yaml
-#      - config_file=/etc/ueransim/config.yaml
-#      - MCC=001
-#      - MNC=01
-#      - MSISDN=0000000003
-#      - APN_LIST=sliceA
-#      - SST_LIST=1
-#      - SD_LIST=0x010203
-#      - GNB=10.0.200.5
-#    networks:
-#      ran-net:
-#        ipv4_address: 10.0.200.7
-#
-#  gnb2:
-#    container_name: gnb2
-#    hostname: gnb2
-#    depends_on:
-#      - mec-upf2
-#      - amf1
-#    build:
-#      context: ./ueransim
-#      target: ueransim-gnb
-#      args:
-#        IPERF2_RELEASE: 2-1-4
-#        UERANSIM_RELEASE: v3.2.4
-#        TSHARK_RELEASE: wireshark-3.4.6
-#        RLS_RELEASE: v1.1.1
-#    image: ueransim-gnb
-#    volumes:
-#      - ./config/templates/config-gnb.yaml:/etc/ueransim/config-template.yaml:ro
-#      - ./config/templates/scripts/config-gnb.sh:/usr/local/bin/config.sh:ro
-#    command: -c /etc/ueransim/config.yaml
-#    cap_add:
-#      - NET_ADMIN
-#    environment:
-#      - routing=true
-#      - config_script=config.sh
-#      - template=/etc/ueransim/config-template.yaml
-#      - config_file=/etc/ueransim/config.yaml
-#      - MCC=001
-#      - MNC=01
-#      - NCI=0x000000011
-#      - LINK_IP=10.0.200.5
-#      - NGAP_IP=10.0.214.4
-#      - GTP_IP=10.0.201.4
-#      - AMF_IP=10.0.214.3
-#      - SST_LIST=1
-#      - SD_LIST=0x010203
-#      - TAC=1
-#    networks:
-#      ran-net:
-#        ipv4_address: 10.0.200.5
-#      tn-amf-net:
-#        ipv4_address: 10.0.214.4
-#      mec-net:
-#        ipv4_address: 10.0.201.4
-
   upf1:
     container_name: upf1
     hostname: upf1
@@ -266,6 +146,27 @@ services:
         ipv4_address: 10.0.210.3
       tn1-net:
         ipv4_address: 10.0.203.3
+      test-net:
+        ipv4_address: 10.0.224.2
+
+  dns:
+    container_name: dns
+    hostname: dns
+    image: bind9
+    build:
+      context: ./bind9
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+    command: -g -p 53
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ./bind9/named.conf.local:/etc/bind/named.conf.local:ro
+      - ./bind9/example.db:/etc/bind/zones/example.db:ro
+    networks:
+      test-net:
+        ipv4_address: 10.0.224.3
 
   mec-upf1:
     container_name: mec-upf1
@@ -299,37 +200,6 @@ services:
         ipv4_address: 10.0.203.2
       test-mec-net:
         ipv4_address: 10.0.223.2
-
-#  mec-upf2:
-#    container_name: mec-upf2
-#    hostname: mec-upf2
-#    restart: always
-#    depends_on:
-#      - upf1
-#    build:
-#      context: ./free5gc
-#      target: free5gc-upf 
-#      args:
-#        F5GC_RELEASE: v3.0.6
-#    image: free5gc-upf
-#    volumes:
-#      - ./config/mec-upf2-config.yaml:/etc/upfd/config.yaml:ro
-#    command: -f /etc/upfd/config.yaml
-#    cap_add:
-#      - NET_ADMIN
-#    sysctls:
-#      - net.ipv4.ip_forward=1
-#    environment:
-#      - routing=true
-#      - config_file=/etc/upfd/config.yaml
-#      - config_script=true
-#    networks:
-#      cp-net:
-#        ipv4_address: 10.0.210.5
-#      mec-net:
-#        ipv4_address: 10.0.201.5
-#      tn1-net:
-#        ipv4_address: 10.0.203.4
 
 
   free5gc-populate:
@@ -391,99 +261,6 @@ services:
         ipv4_address: 10.0.211.4
       tn-amf-net:
         ipv4_address: 10.0.214.3
-
-#  amf2:
-#    container_name: amf2
-#    hostname: amf2
-#    restart: always
-#    depends_on:
-#      - nrf
-#    build:
-#      context: ./free5gc
-#      target: free5gc-amf
-#      args:
-#        F5GC_RELEASE: v3.0.6
-#    image: free5gc-amf
-#    volumes:
-#      - ./config/templates/config-amf.yaml:/etc/amf/config-template.yaml:ro
-#      - ./config/templates/scripts/config-amf.sh:/usr/local/bin/config.sh:ro
-#    command: -amfcfg /etc/amf/config.yaml
-#    cap_add:
-#      - NET_ADMIN
-#    environment:
-#      - routing=true
-#      - template=/etc/amf/config-template.yaml
-#      - config_file=/etc/amf/config.yaml
-#      - config_script=config.sh
-#      - NGAP_IP=10.0.214.5
-#      - SBI_REGISTER_IP=amf2.sbi-net 
-#      - SBI_BINDING_IP=10.0.211.16
-#      - MCC=001
-#      - MNC=01
-#      - AMF_NAME=AMF2
-#      - AMF_ID=000002
-#      - NRF_URI=http://nrf.sbi-net:8000
-#      - DNN_LIST=sliceA
-#      - SST_LIST=1
-#      - SD_LIST=010203
-#      - TAC=2
-#      - LOCALITY=loc2
-#    networks:
-#      sbi-net:
-#        ipv4_address: 10.0.211.16
-#      tn-amf-net:
-#        ipv4_address: 10.0.214.5
-
-  smf1:
-    container_name: smf1
-    hostname: smf1
-    restart: always
-    depends_on:
-      - mec-upf1
-      - upf1
-      - nrf
-    build:
-      context: ./free5gc
-      target: free5gc-smf
-      args:
-        F5GC_RELEASE: v3.0.6
-    image: free5gc-smf
-    volumes:
-      - ./config/smf-config.yaml:/etc/smf/smf-config.yaml:ro
-      - ./config/ue-routing.yaml:/etc/smf/ue-routing.yaml:ro
-    command: --smfcfg /etc/smf/smf-config.yaml --uerouting /etc/smf/ue-routing.yaml
-#    environment:
-#      - sleep=5
-    networks:
-      cp-net:
-        ipv4_address: 10.0.210.2
-      sbi-net:
-        ipv4_address: 10.0.211.3
-#  smf2:
-#    container_name: smf2
-#    hostname: smf2
-#    restart: always
-#    depends_on:
-#      - mec-upf2
-#      - upf1
-#      - nrf
-#    build:
-#      context: ./free5gc
-#      target: free5gc-smf
-#      args:
-#        F5GC_RELEASE: v3.0.6
-#    image: free5gc-smf
-#    volumes:
-#      - ./config/smf-config2.yaml:/etc/smf/smf-config.yaml:ro
-#      - ./config/ue-routing2.yaml:/etc/smf/ue-routing.yaml:ro
-#    command: --smfcfg /etc/smf/smf-config.yaml --uerouting /etc/smf/ue-routing.yaml
-#    environment:
-#      - sleep=5
-#    networks:
-#      cp-net:
-#        ipv4_address: 10.0.210.6
-#      sbi-net:
-#        ipv4_address: 10.0.211.17
 
   nrf:
     container_name: nrf
@@ -686,3 +463,12 @@ networks:
       driver: default
       config:
         - subnet: 10.0.223.0/24
+  test-net:
+    name: test-net
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-test-net 
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.0.224.0/24
