@@ -161,9 +161,6 @@ services:
     image: bind9
     build:
       context: ./bind9
-    ports:
-      - "53:53/tcp"
-      - "53:53/udp"
     command: -g -p 53
     cap_add:
       - NET_ADMIN
@@ -191,13 +188,14 @@ services:
     image: free5gc-upf
     volumes:
       - ./config/mec-upf-config.yaml:/etc/upfd/config.yaml:ro
+      - ./config/mec-upf1-routing.sh:/usr/local/bin/routing.sh:ro
     command: -f /etc/upfd/config.yaml
     cap_add:
       - NET_ADMIN
     sysctls:
       - net.ipv4.ip_forward=1
     environment:
-      - routing=true
+      - routing=routing.sh
       - config_file=/etc/upfd/config.yaml
       - config_script=true
     networks:
@@ -209,6 +207,24 @@ services:
         ipv4_address: 10.0.203.2
       test-mec-net:
         ipv4_address: 10.0.223.2
+
+  mec-dns:
+    container_name: mec-dns
+    hostname: mec-dns
+    image: bind9
+    build:
+      context: ./bind9
+    command: -g -p 53
+    volumes:
+      - ./bind9/named.conf.options:/etc/bind/named.conf.options:ro
+      - ./config/routing-mec-dns.sh:/usr/local/bin/routing.sh:ro
+    environment:
+      - ROUTING=routing.sh
+    cap_add:
+      - NET_ADMIN
+    networks:
+      test-mec-net:
+        ipv4_address: 10.0.223.3
 
 
   free5gc-populate:
