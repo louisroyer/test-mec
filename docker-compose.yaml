@@ -22,11 +22,14 @@ services:
     volumes:
       - ./config/templates/config-ue.yaml:/etc/ueransim/config-template.yaml:ro
       - ./config/templates/scripts/config-ue.sh:/usr/local/bin/config.sh:ro
+      - ./config/routing-ue.sh:/usr/local/bin/routing.sh:ro
     environment:
-      - sleep=10
-      - config_script=config.sh
-      - template=/etc/ueransim/config-template.yaml
-      - config_file=/etc/ueransim/config.yaml
+      - SLEEP=10
+      - CONFIG_SCRIPT=config.sh
+      - TEMPLATE=/etc/ueransim/config-template.yaml
+      - CONFIG_FILE=/etc/ueransim/config.yaml
+      - ROUTING=routing.sh
+      - DNS=10.0.224.3
       - MCC=001
       - MNC=01
       - MSISDN=0000000000
@@ -59,11 +62,14 @@ services:
     volumes:
       - ./config/templates/config-ue.yaml:/etc/ueransim/config-template.yaml:ro
       - ./config/templates/scripts/config-ue.sh:/usr/local/bin/config.sh:ro
+      - ./config/routing-ue.sh:/usr/local/bin/routing.sh:ro
     environment:
-      - sleep=10
-      - config_script=config.sh
-      - template=/etc/ueransim/config-template.yaml
-      - config_file=/etc/ueransim/config.yaml
+      - SLEEP=10
+      - CONFIG_SCRIPT=config.sh
+      - TEMPLATE=/etc/ueransim/config-template.yaml
+      - CONFIG_FILE=/etc/ueransim/config.yaml
+      - ROUTING=routing.sh
+      - DNS=10.0.224.3
       - MCC=001
       - MNC=01
       - MSISDN=0000000001
@@ -142,7 +148,7 @@ services:
       - config_file=/etc/upfd/config.yaml
       - config_script=true
     networks:
-      cp-net:
+      tn-smf-net:
         ipv4_address: 10.0.210.3
       tn1-net:
         ipv4_address: 10.0.203.3
@@ -192,7 +198,7 @@ services:
       - config_file=/etc/upfd/config.yaml
       - config_script=true
     networks:
-      cp-net:
+      tn-smf-net:
         ipv4_address: 10.0.210.4
       mec-net:
         ipv4_address: 10.0.201.3
@@ -261,6 +267,30 @@ services:
         ipv4_address: 10.0.211.4
       tn-amf-net:
         ipv4_address: 10.0.214.3
+
+  smf1:
+    container_name: smf1
+    hostname: smf1
+    restart: always
+    depends_on:
+      - mec-upf1
+      - upf1
+      - nrf
+    build:
+      context: ./free5gc
+      target: free5gc-smf
+      args:
+        F5GC_RELEASE: v3.0.6
+    image: free5gc-smf
+    volumes:
+      - ./config/smf-config.yaml:/etc/smf/smf-config.yaml:ro
+      - ./config/ue-routing.yaml:/etc/smf/ue-routing.yaml:ro
+    command: --smfcfg /etc/smf/smf-config.yaml --uerouting /etc/smf/ue-routing.yaml
+    networks:
+      tn-smf-net:
+        ipv4_address: 10.0.210.2
+      sbi-net:
+        ipv4_address: 10.0.211.3
 
   nrf:
     container_name: nrf
@@ -427,7 +457,7 @@ networks:
       driver: default
       config:
         - subnet: 10.0.214.0/24
-  cp-net:
+  tn-smf-net:
     name: tn-smf-net
     driver: bridge
     driver_opts:

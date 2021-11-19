@@ -71,7 +71,7 @@ CMD ["--help"]
 FROM debian:bullseye-slim as ueransim-ue
 RUN apt-get update -q && DEBIAN_FRONTEND=non-interactive apt-get install -qy --no-install-recommends --no-install-suggests \
     lksctp-tools \
-    iproute2 iputils-ping wget \
+    iproute2 iputils-ping wget bind9-dnsutils \
     libglib2.0 libgcrypt20 libpcap0.8-dev libssh-4 libc-ares2 liblua5.2-0 \
     && rm -rf /var/lib/apt/lists/*
 # TSHARK + RLS

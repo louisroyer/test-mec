@@ -30,10 +30,6 @@ configuration:
         type: AN
         an_ip: 10.0.214.2
 
-#      ran-area2-1:
-#        type: AN
-#        an_ip: 10.0.214.4
-
 
       upf-mec-area1:
         type: UPF
@@ -54,24 +50,6 @@ configuration:
               - 10.0.203.2
             networkInstance: sliceA
 
-#      upf-mec-area2:
-#        type: UPF
-#        node_id: 10.0.210.5
-#        sNssaiUpfInfos:
-#          - sNssai:
-#              sst: 1
-#              sd: 010203
-#            dnnUpfInfoList:
-#              - dnn: sliceA
-#        interfaces:
-#          - interfaceType: N3
-#            endpoints:
-#              - 10.0.201.5
-#            networkInstance: sliceA
-#          - interfaceType: N9
-#            endpoints:
-#              - 10.0.203.4
-#            networkInstance: sliceA
 
       upf-sliceA:
         type: UPF
@@ -94,10 +72,6 @@ configuration:
         B: upf-mec-area1
       - A: upf-mec-area1
         B: upf-sliceA
-#      - A: ran-area2-1
-#        B: upf-mec-area2
-#      - A: upf-mec-area2
-#        B: upf-sliceA
 
   nrfUri: http://nrf.sbi-net:8000 
   locality: loc1

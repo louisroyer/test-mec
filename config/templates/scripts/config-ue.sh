@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-echo "[$(date --iso-8601=s)] Using environment variables for building $config_file from $template." > /dev/stderr
-cp $template $config_file
-sed -i "s/%MCC/$MCC/g" $config_file
-sed -i "s/%MNC/$MNC/g" $config_file
-sed -i "s/%MSISDN/$MSISDN/g" $config_file 
-sed -i "s/%GNB/$GNB/g" $config_file
+echo "[$(date --iso-8601=s)] Using environment variables for building $CONFIG_FILE from $TEMPLATE." > /dev/stderr
+cp $TEMPLATE $CONFIG_FILE
+sed -i "s/%MCC/$MCC/g" $CONFIG_FILE
+sed -i "s/%MNC/$MNC/g" $CONFIG_FILE
+sed -i "s/%MSISDN/$MSISDN/g" $CONFIG_FILE 
+sed -i "s/%GNB/$GNB/g" $CONFIG_FILE
 
 # S-NSSAI
 read -ra SD_ARRAY <<< $SD_LIST
@@ -20,5 +20,5 @@ for SST in $SST_LIST; do
 	SESSIONS_SUB="${SESSIONS_SUB}\n      sd: ${SD_ARRAY[$COUNT_SNSSAI]}"
 	COUNT_SNSSAI=${COUNT_SNSSAI+1}
 done
-sed -i "s/%S_NSSAI/$S_NSSAI_SUB/g" $config_file
-sed -i "s/%SESSIONS/$SESSIONS_SUB/g" $config_file
+sed -i "s/%S_NSSAI/$S_NSSAI_SUB/g" $CONFIG_FILE
+sed -i "s/%SESSIONS/$SESSIONS_SUB/g" $CONFIG_FILE
