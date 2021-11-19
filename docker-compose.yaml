@@ -169,7 +169,10 @@ services:
       - NET_ADMIN
     volumes:
       - ./bind9/named.conf.local:/etc/bind/named.conf.local:ro
-      - ./bind9/example.db:/etc/bind/zones/example.db:ro
+      - ./bind9/test.db:/etc/bind/zones/test.db:ro
+      - ./config/routing-dns.sh:/usr/local/bin/routing.sh:ro
+    environment:
+      - ROUTING=routing.sh
     networks:
       test-net:
         ipv4_address: 10.0.224.3

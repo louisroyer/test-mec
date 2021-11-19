@@ -1,5 +1,5 @@
 $TTL    86400
-@   IN  SOA ns1.example. root.example. (
+@   IN  SOA ns1.test. root.test. (
             2014100801  ; Serial
             43200       ; Refresh
             3600        ; Retry
@@ -7,7 +7,7 @@ $TTL    86400
             180 )       ; Minimum TTL
 
 ; Nameservers
-    IN  NS  ns1.example.
+    IN  NS  ns1.test.
 
 
 
