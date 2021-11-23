@@ -20,7 +20,7 @@ configuration:
       dnnInfos:
         - dnn: sliceA
           dns: 
-            ipv4: 8.8.8.8
+            ipv4: 10.0.224.3
             ipv6: 2001:4860:4860::8888
   pfcp:
     addr: 10.0.210.2
@@ -33,7 +33,7 @@ configuration:
 
       upf-mec-area1:
         type: UPF
-        node_id: 10.0.210.4
+        node_id: 10.0.213.3
         sNssaiUpfInfos:
           - sNssai:
               sst: 1
@@ -47,7 +47,7 @@ configuration:
             networkInstance: sliceA
           - interfaceType: N9
             endpoints:
-              - 10.0.203.2
+              - 10.0.215.2
             networkInstance: sliceA
 
 
@@ -65,7 +65,7 @@ configuration:
         interfaces:
           - interfaceType: N9
             endpoints:
-              - 10.0.203.3
+              - 10.0.216.2
             networkInstance: sliceA
     links:
       - A: ran-area1-1

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-if [ ! -z "$config_script" ]; then
-	/usr/bin/env $config_script
+if [ ! -z "$CONFIG_SCRIPT" ]; then
+	/usr/bin/env $CONFIG_SCRIPT
 fi
-if [ ! -z "$routing" ]; then
-	/usr/bin/env $routing
+if [ ! -z "$ROUTING" ]; then
+	/usr/bin/env $ROUTING
 fi
 exec amf "$@"

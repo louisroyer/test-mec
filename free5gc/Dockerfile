@@ -25,8 +25,8 @@ COPY --from=builder /go/src/free5gc/NFs/upf/build/updk/src/third_party/libgtp5gn
 COPY --from=builder /go/src/free5gc/NFs/upf/build/utlt_logger/liblogger.so /usr/local/lib/liblogger.so
 RUN ldconfig
 COPY ./entrypoint-upf.sh /usr/local/bin/entrypoint.sh
-ENV routing ""
-ENV config_script ""
+ENV ROUTING ""
+ENV CONFIG_SCRIPT ""
 ENTRYPOINT ["entrypoint.sh"]
 CMD ["-h"]
 
@@ -36,17 +36,20 @@ RUN apt-get update -q && DEBIAN_FRONTEND=non-interactive apt-get install -qy --n
     && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /go/src/free5gc/bin/amf /usr/local/bin/amf
 COPY ./entrypoint-amf.sh /usr/local/bin/entrypoint.sh
-ENV routing ""
-ENV config_script ""
+ENV ROUTING ""
+ENV CONFIG_SCRIPT ""
 ENTRYPOINT ["entrypoint.sh"]
 CMD ["-h"]
 
 FROM debian:bullseye-slim as free5gc-smf
+RUN apt-get update -q && DEBIAN_FRONTEND=non-interactive apt-get install -qy --no-install-recommends --no-install-suggests \
+    iproute2 iputils-ping tshark ethtool \
+    && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /go/src/free5gc/bin/smf /usr/local/bin/smf
 COPY ./entrypoint-smf.sh /usr/local/bin/entrypoint.sh
-ENV routing ""
-ENV config_script ""
-ENV sleep ""
+ENV ROUTING ""
+ENV CONFIG_SCRIPT ""
+ENV SLEEP ""
 ENTRYPOINT ["entrypoint.sh"]
 CMD ["-h"]
 

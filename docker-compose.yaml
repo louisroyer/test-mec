@@ -99,19 +99,20 @@ services:
     volumes:
       - ./config/templates/config-gnb.yaml:/etc/ueransim/config-template.yaml:ro
       - ./config/templates/scripts/config-gnb.sh:/usr/local/bin/config.sh:ro
+      - ./config/routing-gnb.sh:/usr/local/bin/routing.sh:ro
     command: -c /etc/ueransim/config.yaml
     cap_add:
       - NET_ADMIN
     environment:
-      - routing=true
-      - config_script=config.sh
-      - template=/etc/ueransim/config-template.yaml
-      - config_file=/etc/ueransim/config.yaml
+      - ROUTING=routing.sh
+      - CONFIG_SCRIPT=config.sh
+      - TEMPLATE=/etc/ueransim/config-template.yaml
+      - CONFIG_FILE=/etc/ueransim/config.yaml
       - MCC=001
       - MNC=01
       - NCI=0x000000010
       - LINK_IP=10.0.200.2
-      - NGAP_IP=10.0.214.2
+      - NGAP_IP=10.0.213.2
       - GTP_IP=10.0.201.2
       - AMF_IP=10.0.214.3
       - SST_LIST=1
@@ -120,8 +121,8 @@ services:
     networks:
       ran-net:
         ipv4_address: 10.0.200.2
-      tn-amf-net:
-        ipv4_address: 10.0.214.2
+      tn-cp-gw-net:
+        ipv4_address: 10.0.213.2
       mec-net:
         ipv4_address: 10.0.201.2
 
@@ -144,16 +145,15 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
     environment:
-      - routing=routing.sh
-      - config_file=/etc/upfd/config.yaml
-      - config_script=true
+      - ROUTING=routing.sh
+      - CONFIG_FILE=/etc/upfd/config.yaml
     networks:
-      tn-smf-net:
+      n4-net:
         ipv4_address: 10.0.210.3
-      tn1-net:
-        ipv4_address: 10.0.203.3
       test-net:
         ipv4_address: 10.0.224.2
+      tn-sliceA-st-net:
+        ipv4_address: 10.0.216.2
 
   dns:
     container_name: dns
@@ -166,6 +166,7 @@ services:
       - NET_ADMIN
     volumes:
       - ./bind9/named.conf.local:/etc/bind/named.conf.local:ro
+      - ./bind9/mno-named.conf.options:/etc/bind/named.conf.options:ro
       - ./bind9/test.db:/etc/bind/zones/test.db:ro
       - ./config/routing-dns.sh:/usr/local/bin/routing.sh:ro
     environment:
@@ -173,6 +174,56 @@ services:
     networks:
       test-net:
         ipv4_address: 10.0.224.3
+
+  trunks-cp:
+    container_name: trunks-cp
+    hostname: trunks-cp
+    restart: always
+    image: trunks
+    build:
+      context: ./trunks
+      args:
+        TRUNKS_RELEASE: V2.0.1
+    command: --config /etc/trunks/trunks.yaml --acm
+    volumes:
+      - ./config/trunks-cp.yaml:/etc/trunks/trunks.yaml:ro
+      - ./config/routing-trunk-cp.sh:/usr/local/bin/routing.sh:ro
+    environment:
+      - ROUTING=routing.sh
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+    networks:
+      tn-cp-st-net:
+        ipv4_address: 10.0.214.4
+      tn-cp-gw-net:
+        ipv4_address: 10.0.213.4
+
+  trunks-up:
+    container_name: trunks-up
+    hostname: trunks-up
+    restart: always
+    image: trunks
+    build:
+      context: ./trunks
+      args:
+        TRUNKS_RELEASE: V2.0.1
+    command: --config /etc/trunks/trunks.yaml --acm
+    volumes:
+      - ./config/trunks-up.yaml:/etc/trunks/trunks.yaml:ro
+      - ./config/routing-trunk-up.sh:/usr/local/bin/routing.sh:ro
+    environment:
+      - ROUTING=routing.sh
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+    networks:
+      tn-sliceA-st-net:
+        ipv4_address: 10.0.216.3
+      tn-sliceA-gw-net:
+        ipv4_address: 10.0.215.3
 
   mec-upf1:
     container_name: mec-upf1
@@ -195,18 +246,17 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
     environment:
-      - routing=routing.sh
-      - config_file=/etc/upfd/config.yaml
-      - config_script=true
+      - ROUTING=routing.sh
+      - CONFIG_FILE=/etc/upfd/config.yaml
     networks:
-      tn-smf-net:
-        ipv4_address: 10.0.210.4
       mec-net:
         ipv4_address: 10.0.201.3
-      tn1-net:
-        ipv4_address: 10.0.203.2
       test-mec-net:
         ipv4_address: 10.0.223.2
+      tn-cp-gw-net:
+        ipv4_address: 10.0.213.3
+      tn-sliceA-gw-net:
+        ipv4_address: 10.0.215.2
 
   mec-dns:
     container_name: mec-dns
@@ -260,14 +310,15 @@ services:
     volumes:
       - ./config/templates/config-amf.yaml:/etc/amf/config-template.yaml:ro
       - ./config/templates/scripts/config-amf.sh:/usr/local/bin/config.sh:ro
+      - ./config/routing-amf.sh:/usr/local/bin/routing.sh:ro
     command: -amfcfg /etc/amf/config.yaml
     cap_add:
       - NET_ADMIN
     environment:
-      - routing=true
-      - template=/etc/amf/config-template.yaml
-      - config_file=/etc/amf/config.yaml
-      - config_script=config.sh
+      - ROUTING=routing.sh
+      - TEMPLATE=/etc/amf/config-template.yaml
+      - CONFIG_FILE=/etc/amf/config.yaml
+      - CONFIG_SCRIPT=config.sh
       - NGAP_IP=10.0.214.3
       - SBI_REGISTER_IP=amf1.sbi-net 
       - SBI_BINDING_IP=10.0.211.4
@@ -284,7 +335,7 @@ services:
     networks:
       sbi-net:
         ipv4_address: 10.0.211.4
-      tn-amf-net:
+      tn-cp-st-net:
         ipv4_address: 10.0.214.3
 
   smf1:
@@ -304,9 +355,14 @@ services:
     volumes:
       - ./config/smf-config.yaml:/etc/smf/smf-config.yaml:ro
       - ./config/ue-routing.yaml:/etc/smf/ue-routing.yaml:ro
+      - ./config/routing-smf.sh:/usr/local/bin/routing.sh:ro
+    environment:
+      - ROUTING=routing.sh
+    cap_add:
+      - NET_ADMIN
     command: --smfcfg /etc/smf/smf-config.yaml --uerouting /etc/smf/ue-routing.yaml
     networks:
-      tn-smf-net:
+      n4-net:
         ipv4_address: 10.0.210.2
       sbi-net:
         ipv4_address: 10.0.211.3
@@ -439,6 +495,28 @@ services:
       sbi-net:
         ipv4_address: 10.0.211.9
 
+  cp-st-router:
+    container_name: cp-st-router
+    hostname: cp-st-router
+    restart: always
+    build:
+      context: ./router
+    image: router
+    volumes:
+      - ./config/routing-cp-st-router.sh:/usr/local/bin/routing.sh:ro
+    environment:
+      - ROUTING=routing.sh
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+    networks:
+      tn-cp-st-net:
+        ipv4_address: 10.0.214.2
+      n4-net:
+        ipv4_address: 10.0.210.4
+
+
 networks:
   ran-net:
     name: ran-net
@@ -458,29 +536,47 @@ networks:
       driver: default
       config:
         - subnet: 10.0.201.0/24
-  tn1-net:
-    name: tn1-net
+  tn-cp-gw-net:
+    name: tn-cp-gw-net
     driver: bridge
     driver_opts:
-      com.docker.network.bridge.name: br-tn1-net 
+      com.docker.network.bridge.name: br-tn-cp-gw-net 
     ipam:
       driver: default
       config:
-        - subnet: 10.0.203.0/24
-  tn-amf-net:
-    name: tn-amf-net
+        - subnet: 10.0.213.0/24
+  tn-cp-st-net:
+    name: tn-cp-st-net
     driver: bridge
     driver_opts:
-      com.docker.network.bridge.name: br-tn-amf-net 
+      com.docker.network.bridge.name: br-tn-cp-st-net 
     ipam:
       driver: default
       config:
         - subnet: 10.0.214.0/24
-  tn-smf-net:
-    name: tn-smf-net
+  tn-sliceA-gw-net:
+    name: tn-sliceA-gw-net
     driver: bridge
     driver_opts:
-      com.docker.network.bridge.name: br-tn-smf-net 
+      com.docker.network.bridge.name: br-tn-sA-gw-net 
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.0.215.0/24
+  tn-sliceA-st-net:
+    name: tn-sliceA-st-net
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-tn-sA-st-net 
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.0.216.0/24
+  n4-net:
+    name: n4-net
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-n4-net 
     ipam:
       driver: default
       config:

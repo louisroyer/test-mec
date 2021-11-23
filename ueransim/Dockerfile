@@ -64,7 +64,8 @@ COPY --from=rls-builder /usr/local/lib/wireshark/plugins/RLS-wireshark-dissector
 COPY --from=builder UERANSIM/build/nr-cli /usr/local/bin/nr-cli
 COPY --from=builder UERANSIM/build/nr-gnb /usr/local/bin/nr-gnb
 COPY ./entrypoint-gnb.sh /usr/local/bin/entrypoint.sh
-ENV routing ""
+ENV CONFIG_SCRIPT ""
+ENV ROUTING ""
 ENTRYPOINT ["entrypoint.sh"]
 CMD ["--help"]
 

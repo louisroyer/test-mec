@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
-if [ ! -z "$config_script" ]; then
-	/usr/bin/env $config_script
+if [ ! -z "$CONFIG_SCRIPT" ]; then
+	/usr/bin/env $CONFIG_SCRIPT
 fi
-if [ ! -z "$routing" ]; then
-	/usr/bin/env $routing
+if [ ! -z "$ROUTING" ]; then
+	/usr/bin/env $ROUTING
 fi
-if [ ! -z "$sleep" ]; then
-	echo "[$(date --iso-8601=s)] Starting in $sleep seconds" > /dev/stderr
-	sleep $sleep
+if [ ! -z "$SLEEP" ]; then
+	echo "[$(date --iso-8601=s)] Starting in $SLEEP seconds" > /dev/stderr
+	sleep $SLEEP
 fi
 exec smf "$@"

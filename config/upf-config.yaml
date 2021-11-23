@@ -7,7 +7,7 @@ configuration:
   pfcp:
     - addr: 10.0.210.3
   gtpu:
-    - addr: 10.0.203.3
+    - addr: 10.0.216.2
   dnn_list:
     - dnn: sliceA
       cidr: 10.0.222.0/24
