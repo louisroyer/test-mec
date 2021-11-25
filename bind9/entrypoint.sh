@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-if [ ! -z "$ROUTING" ]; then
-	/usr/bin/env $ROUTING
+if [ -n "${ROUTING}" ]; then
+	/usr/bin/env "${ROUTING}"
 fi
 exec named "$@"
