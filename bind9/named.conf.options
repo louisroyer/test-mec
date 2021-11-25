@@ -2,7 +2,7 @@ options {
 	allow-query { any; };
 	directory "/var/cache/bind";
 	forwarders {
-		10.0.224.3;
+		10.0.218.2;
 	};
 	forward only;
 	dnssec-enable no;

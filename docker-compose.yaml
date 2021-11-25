@@ -165,6 +165,7 @@ services:
     cap_add:
       - NET_ADMIN
     volumes:
+      - ./bind9-cache:/var/cache/bind
       - ./bind9/named.conf.local:/etc/bind/named.conf.local:ro
       - ./bind9/mno-named.conf.options:/etc/bind/named.conf.options:ro
       - ./bind9/test.db:/etc/bind/zones/test.db:ro
@@ -174,6 +175,8 @@ services:
     networks:
       test-net:
         ipv4_address: 10.0.224.3
+      tn-mec-st-net:
+        ipv4_address: 10.0.218.2
 
   trunks-cp:
     container_name: trunks-cp
@@ -225,6 +228,31 @@ services:
       tn-sliceA-gw-net:
         ipv4_address: 10.0.215.3
 
+  trunks-mec:
+    container_name: trunks-mec
+    hostname: trunks-mec
+    restart: always
+    image: trunks
+    build:
+      context: ./trunks
+      args:
+        TRUNKS_RELEASE: V2.0.1
+    command: --config /etc/trunks/trunks.yaml --acm
+    volumes:
+      - ./config/trunks-mec.yaml:/etc/trunks/trunks.yaml:ro
+      - ./config/routing-trunk-mec.sh:/usr/local/bin/routing.sh:ro
+    environment:
+      - ROUTING=routing.sh
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+    networks:
+      tn-mec-st-net:
+        ipv4_address: 10.0.218.3
+      tn-mec-gw-net:
+        ipv4_address: 10.0.217.3
+
   mec-upf1:
     container_name: mec-upf1
     hostname: mec-upf1
@@ -275,6 +303,8 @@ services:
     networks:
       test-mec-net:
         ipv4_address: 10.0.223.3
+      tn-mec-gw-net:
+        ipv4_address: 10.0.217.2
 
 
   free5gc-populate:
@@ -572,6 +602,24 @@ networks:
       driver: default
       config:
         - subnet: 10.0.216.0/24
+  tn-mec-gw-net:
+    name: tn-mec-gw-net
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-tn-mec-gw
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.0.217.0/24
+  tn-mec-st-net:
+    name: tn-mec-st-net
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-tn-mec-st 
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.0.218.0/24
   n4-net:
     name: n4-net
     driver: bridge
