@@ -10,12 +10,14 @@ RUN ./bootstrap && make && make install
 
 FROM debian:bullseye-slim AS builder
 ARG UERANSIM_RELEASE
+ARG UERANSIM_REPO
+ARG UERANSIM_INVALIDATE_CACHE
 RUN apt-get update -q && DEBIAN_FRONTEND=non-interactive apt-get install -qy --no-install-recommends --no-install-suggests \
     make g++ git ca-certificates libsctp-dev \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=cmake-builder /usr/local/share/cmake-3.20 /usr/local/share/cmake-3.20
 COPY --from=cmake-builder /usr/local/bin/cmake /usr/local/bin/cmake
-RUN : ${UERANSIM_RELEASE:? Missing build-arg UERANSIM_RELEASE.} && git clone -b $UERANSIM_RELEASE --depth 1  https://github.com/aligungr/UERANSIM --quiet
+RUN : ${UERANSIM_RELEASE:? Missing build-arg UERANSIM_RELEASE.} && git clone -b $UERANSIM_RELEASE --depth 1  ${UERANSIM_REPO:-https://github.com/aligungr/UERANSIM} --quiet
 WORKDIR UERANSIM
 RUN make
 

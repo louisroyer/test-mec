@@ -28,7 +28,6 @@ configuration:
     up_nodes:
       ran-area1-1:
         type: AN
-        an_ip: 10.0.214.2
 
 
       upf-mec-area1:

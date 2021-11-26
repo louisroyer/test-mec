@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 echo "[$(date --iso-8601=s)] Using environment variables for building ${CONFIG_FILE} from ${TEMPLATE}." > /dev/stderr
 cp "${TEMPLATE}" "${CONFIG_FILE}"
-sed -i "s/%MCC/$MCC/g" "${CONFIG_FILE}"
-sed -i "s/%MNC/$MNC/g" "${CONFIG_FILE}"
-sed -i "s/%MSISDN/$MSISDN/g" "${CONFIG_FILE}" 
-sed -i "s/%GNB/$GNB/g" "${CONFIG_FILE}"
+sed -i "s/%MCC/${MCC}/g" "${CONFIG_FILE}"
+sed -i "s/%MNC/${MNC}/g" "${CONFIG_FILE}"
+sed -i "s/%MSISDN/${MSISDN}/g" "${CONFIG_FILE}" 
+
+# GNB
+for GNB_IP in $GNB; do
+	GNB_SUB="${GNB_SUB}\n  - ${GNB_IP}"
+done
+sed -i "s/%GNB/${GNB_SUB}/g" "${CONFIG_FILE}"
 
 # S-NSSAI
 read -ra SD_ARRAY <<< "${SD_LIST}"
