@@ -42,6 +42,7 @@ configuration:
         interfaces:
           - interfaceType: N3
             endpoints:
+              #- fd00:d0cc:e700:1111:4::3
               - 10.0.201.3
             networkInstance: sliceA
           - interfaceType: N9
