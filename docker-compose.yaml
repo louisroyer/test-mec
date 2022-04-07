@@ -10,9 +10,6 @@ services:
       target: ueransim-ue
       args:
         IPERF2_RELEASE: 2-1-4
-        UERANSIM_RELEASE: v3.2.5
-        TSHARK_RELEASE: wireshark-3.4.6
-        RLS_RELEASE: v1.1.1
     image: ueransim-ue
     cap_add:
       - NET_ADMIN
@@ -54,9 +51,6 @@ services:
       target: ueransim-ue
       args:
         IPERF2_RELEASE: 2-1-4
-        UERANSIM_RELEASE: v3.2.5
-        TSHARK_RELEASE: wireshark-3.4.6
-        RLS_RELEASE: v1.1.1
     image: ueransim-ue
     cap_add:
       - NET_ADMIN
@@ -100,9 +94,6 @@ services:
       target: ueransim-gnb
       args:
         IPERF2_RELEASE: 2-1-4
-        UERANSIM_RELEASE: v3.2.5
-        TSHARK_RELEASE: wireshark-3.4.6
-        RLS_RELEASE: v1.1.1
     image: ueransim-gnb
     volumes:
       - ./config/templates/config-gnb.yaml:/etc/ueransim/config-template.yaml:ro
