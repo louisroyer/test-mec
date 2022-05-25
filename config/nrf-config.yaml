@@ -1,5 +1,5 @@
 info:
-  version: 1.0.0
+  version: 1.0.1
   description: NRF initial local configuration
 
 configuration:
@@ -10,6 +10,9 @@ configuration:
     registerIPv4: nrf.sbi-net # IP used to serve NFs or register to another NRF
     bindingIPv4: 10.0.211.2  # IP used to bind the service
     port: 8000 # port used to bind the service
+    tls:
+      pem: config/TLS/nrf.pem
+      key: config/TLS/nrf.key
   DefaultPlmnId:
     mcc: 001 # Mobile Country Code (3 digits string, digit: 0~9)
     mnc: 01 # Mobile Network Code (2 or 3 digits string, digit: 0~9)
@@ -22,14 +25,5 @@ configuration:
   # ReportCaller: enable the caller report or not, value: true or false
 logger:
   NRF:
-    debugLevel: info
-    ReportCaller: false
-  PathUtil:
-    debugLevel: info
-    ReportCaller: false
-  OpenApi:
-    debugLevel: info
-    ReportCaller: false
-  MongoDBLibrary:
     debugLevel: info
     ReportCaller: false

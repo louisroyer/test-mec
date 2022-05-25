@@ -23,7 +23,7 @@ services:
       - ./config/templates/scripts/config-ue.sh:/usr/local/bin/config.sh:ro
       - ./config/routing-ue.sh:/usr/local/bin/routing.sh:ro
     environment:
-      - SLEEP=10
+      - SLEEP=2
       - CONFIG_SCRIPT=config.sh
       - TEMPLATE=/etc/ueransim/config-template.yaml
       - CONFIG_FILE=/etc/ueransim/config.yaml
@@ -64,7 +64,7 @@ services:
       - ./config/templates/scripts/config-ue.sh:/usr/local/bin/config.sh:ro
       - ./config/routing-ue.sh:/usr/local/bin/routing.sh:ro
     environment:
-      - SLEEP=10
+      - SLEEP=3
       - CONFIG_SCRIPT=config.sh
       - TEMPLATE=/etc/ueransim/config-template.yaml
       - CONFIG_FILE=/etc/ueransim/config.yaml
@@ -142,12 +142,12 @@ services:
       context: ./free5gc
       target: free5gc-upf 
       args:
-        F5GC_RELEASE: v3.0.6
+        F5GC_RELEASE: v3.1.1
     image: free5gc-upf
     volumes:
       - ./config/upf-config.yaml:/etc/upfd/config.yaml:ro
       - ./config/upf1-routing.sh:/usr/local/bin/routing.sh:ro
-    command: -f /etc/upfd/config.yaml
+    command: -c /etc/upfd/config.yaml
     cap_add:
       - NET_ADMIN
     sysctls:
@@ -275,12 +275,12 @@ services:
       context: ./free5gc
       target: free5gc-upf 
       args:
-        F5GC_RELEASE: v3.0.6
+        F5GC_RELEASE: v3.1.1
     image: free5gc-upf
     volumes:
       - ./config/mec-upf-config.yaml:/etc/upfd/config.yaml:ro
       - ./config/mec-upf1-routing.sh:/usr/local/bin/routing.sh:ro
-    command: -f /etc/upfd/config.yaml
+    command: -c /etc/upfd/config.yaml
     cap_add:
       - NET_ADMIN
     sysctls:
@@ -350,13 +350,13 @@ services:
       context: ./free5gc
       target: free5gc-amf
       args:
-        F5GC_RELEASE: v3.0.6
+        F5GC_RELEASE: v3.1.1
     image: free5gc-amf
     volumes:
       - ./config/templates/config-amf.yaml:/etc/amf/config-template.yaml:ro
       - ./config/templates/scripts/config-amf.sh:/usr/local/bin/config.sh:ro
       - ./config/routing-amf.sh:/usr/local/bin/routing.sh:ro
-    command: -amfcfg /etc/amf/config.yaml
+    command: --config /etc/amf/config.yaml
     cap_add:
       - NET_ADMIN
     sysctls:
@@ -399,7 +399,7 @@ services:
       context: ./free5gc
       target: free5gc-smf
       args:
-        F5GC_RELEASE: v3.0.6
+        F5GC_RELEASE: v3.1.1
     image: free5gc-smf
     volumes:
       - ./config/smf-config.yaml:/etc/smf/smf-config.yaml:ro
@@ -409,7 +409,7 @@ services:
       - ROUTING=routing.sh
     cap_add:
       - NET_ADMIN
-    command: --smfcfg /etc/smf/smf-config.yaml --uerouting /etc/smf/ue-routing.yaml
+    command: --config /etc/smf/smf-config.yaml --uerouting /etc/smf/ue-routing.yaml
     networks:
       n4-net:
         ipv4_address: 10.0.210.2
@@ -426,11 +426,11 @@ services:
       context: ./free5gc
       target: free5gc-nrf
       args:
-        F5GC_RELEASE: v3.0.6
+        F5GC_RELEASE: v3.1.1
     image: free5gc-nrf
     volumes:
       - ./config/nrf-config.yaml:/etc/nrf/config.yaml:ro
-    command: --nrfcfg /etc/nrf/config.yaml
+    command: --config /etc/nrf/config.yaml
     networks:
       db-net:
       sbi-net:
@@ -457,11 +457,11 @@ services:
       context: ./free5gc
       target: free5gc-ausf
       args:
-        F5GC_RELEASE: v3.0.6
+        F5GC_RELEASE: v3.1.1
     image: free5gc-ausf
     volumes:
       - ./config/ausf-config.yaml:/etc/ausf/config.yaml:ro
-    command: -ausfcfg /etc/ausf/config.yaml
+    command: --config /etc/ausf/config.yaml
     networks:
       sbi-net:
         ipv4_address: 10.0.211.5
@@ -476,11 +476,11 @@ services:
       context: ./free5gc
       target: free5gc-nssf
       args:
-        F5GC_RELEASE: v3.0.6
+        F5GC_RELEASE: v3.1.1
     image: free5gc-nssf
     volumes:
       - ./config/nssf-config.yaml:/etc/nssf/config.yaml:ro
-    command: -nssfcfg /etc/nssf/config.yaml
+    command: --config /etc/nssf/config.yaml
     networks:
       sbi-net:
         ipv4_address: 10.0.211.6
@@ -495,11 +495,11 @@ services:
       context: ./free5gc
       target: free5gc-udm
       args:
-        F5GC_RELEASE: v3.0.6
+        F5GC_RELEASE: v3.1.1
     image: free5gc-udm
     volumes:
       - ./config/udm-config.yaml:/etc/udm/config.yaml:ro
-    command: -udmcfg /etc/udm/config.yaml
+    command: --config /etc/udm/config.yaml
     networks:
       sbi-net:
         ipv4_address: 10.0.211.7
@@ -514,11 +514,11 @@ services:
       context: ./free5gc
       target: free5gc-udr
       args:
-        F5GC_RELEASE: v3.0.6
+        F5GC_RELEASE: v3.1.1
     image: free5gc-udr
     volumes:
       - ./config/udr-config.yaml:/etc/udr/config.yaml:ro
-    command: -udrcfg /etc/udr/config.yaml
+    command: --config /etc/udr/config.yaml
     networks:
       db-net:
       sbi-net:
@@ -534,11 +534,11 @@ services:
       context: ./free5gc
       target: free5gc-pcf
       args:
-        F5GC_RELEASE: v3.0.6
+        F5GC_RELEASE: v3.1.1
     image: free5gc-pcf
     volumes:
       - ./config/pcf-config.yaml:/etc/pcf/config.yaml:ro
-    command: -pcfcfg /etc/pcf/config.yaml
+    command: --config /etc/pcf/config.yaml
     networks:
       db-net:
       sbi-net:

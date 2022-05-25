@@ -1,5 +1,5 @@
 info:
-  version: 1.0.0
+  version: 1.0.1
   description: NSSF initial local configuration
 
 configuration:
@@ -9,6 +9,9 @@ configuration:
     registerIPv4: nssf.sbi-net # IP used to register to NRF
     bindingIPv4: 10.0.211.6  # IP used to bind the service
     port: 8000 # Port used to bind the service
+    tls:
+      pem: config/TLS/nssf.pem
+      key: config/TLS/nssf.key
   serviceNameList: # the SBI services provided by this SMF, refer to TS 29.531
     - nnssf-nsselection # Nnssf_NSSelection service
     - nnssf-nssaiavailability # Nnssf_NSSAIAvailability service
@@ -63,11 +66,5 @@ configuration:
   # ReportCaller: enable the caller report or not, value: true or false
 logger:
   NSSF:
-    debugLevel: info
-    ReportCaller: false
-  PathUtil:
-    debugLevel: info
-    ReportCaller: false
-  OpenApi:
     debugLevel: info
     ReportCaller: false

@@ -1,5 +1,5 @@
 info:
-  version: 1.0.2
+  version: 1.0.3
   description: AMF initial local configuration
 
 configuration:
@@ -11,6 +11,9 @@ configuration:
     registerIPv4: %SBI_REGISTER_IP # IP used to register to NRF
     bindingIPv4: %SBI_BINDING_IP  # IP used to bind the service
     port: %SBI_BINDING_PORT # port used to bind the service
+    tls:
+      pem: config/TLS/amf.pem
+      key: config/TLS/amf.key
   serviceNameList: # the SBI services provided by this AMF, refer to TS 29.518
     - namf-comm # Namf_Communication service
     - namf-evts # Namf_EventExposure service
@@ -47,9 +50,10 @@ configuration:
   networkName:  # the name of this core network
     full: free5GC
     short: free
-  locality: %LOCALITY
+      #  locality: %LOCALITY
   networkFeatureSupport5GS: # 5gs Network Feature Support IE, refer to TS 24.501
     enable: true # append this IE in Registration accept or not
+    length: 1 # IE content length (uinteger, range: 1~3)
     imsVoPS: 0 # IMS voice over PS session indicator (uinteger, range: 0~1)
     emc: 0 # Emergency service support indicator for 3GPP access (uinteger, range: 0~3)
     emf: 0 # Emergency service fallback indicator for 3GPP access (uinteger, range: 0~3)
@@ -85,6 +89,11 @@ configuration:
     enable: true     # true or false
     expireTime: 6s   # default is 6 seconds
     maxRetryTimes: 4 # the max number of retransmission
+  # retransmission timer for NAS Identity Request message
+  t3570:
+    enable: true     # true or false
+    expireTime: 6s   # default is 6 seconds
+    maxRetryTimes: 4 # the max number of retransmission
 
 # the kind of log output
   # debugLevel: how detailed to output, value: trace, debug, info, warn, error, fatal, panic
@@ -103,11 +112,5 @@ logger:
     debugLevel: info
     ReportCaller: false
   Aper:
-    debugLevel: info
-    ReportCaller: false
-  PathUtil:
-    debugLevel: info
-    ReportCaller: false
-  OpenApi:
     debugLevel: info
     ReportCaller: false

@@ -9,6 +9,9 @@ configuration:
     registerIPv4: smf1.sbi-net # IP used to register to NRF
     bindingIPv4: 10.0.211.3  # IP used to bind the service
     port: 8000
+    tls:
+      key: config/TLS/smf.key
+      pem: config/TLS/smf.pem
   serviceNameList:
     - nsmf-pdusession
     - nsmf-event-exposure
@@ -22,17 +25,21 @@ configuration:
           dns: 
             ipv4: 10.0.224.3
             ipv6: 2001:4860:4860::8888
+  plmnList:
+    - mcc: "001"
+      mnc: "01"
+
   pfcp:
     addr: 10.0.210.2
-  userplane_information:
-    up_nodes:
+  userplaneInformation:
+    upNodes:
       ran-area1-1:
         type: AN
 
 
       upf-mec-area1:
         type: UPF
-        node_id: 10.0.213.3
+        nodeID: 10.0.213.3
         sNssaiUpfInfos:
           - sNssai:
               sst: 1
@@ -53,7 +60,7 @@ configuration:
 
       upf-sliceA:
         type: UPF
-        node_id: 10.0.210.3
+        nodeID: 10.0.210.3
         sNssaiUpfInfos:
           - sNssai:
               sst: 1
@@ -74,7 +81,7 @@ configuration:
         B: upf-sliceA
 
   nrfUri: http://nrf.sbi-net:8000 
-  locality: loc1
+    #  locality: loc1
   ulcl: true
 
 logger:
@@ -88,12 +95,6 @@ logger:
     debugLevel: info
     ReportCaller: false
   Aper:
-    debugLevel: info
-    ReportCaller: false
-  PathUtil:
-    debugLevel: info
-    ReportCaller: false
-  OpenApi:
     debugLevel: info
     ReportCaller: false
   PFCP:
