@@ -86,7 +86,7 @@ configuration:
 
 logger:
   SMF:
-    debugLevel: info
+    debugLevel: trace
     ReportCaller: false
   NAS:
     debugLevel: info
@@ -98,5 +98,5 @@ logger:
     debugLevel: info
     ReportCaller: false
   PFCP:
-    debugLevel: info
+    debugLevel: trace
     ReportCaller: false

@@ -17,16 +17,5 @@ ueRoutingInfo: # the list of UE routing information
     specificPath:
       - dest: 10.0.224.3/32
         path: [upf-mec-area1, upf-mec-area1]
-#  DN:
-#    members:
-#      - imsi-001010000000000
-#      - imsi-001010000000001
-#
-#    topology:
-#      - A: ran-area1-1
-#        B: upf-mec-area1
-#      - A: upf-mec-area1
-#        B: upf-sliceA
-#    specificPath:
-#      - dest: 10.0.222.0/24
-#        path: [upf-mec-area1, upf-mec-area1]
+      - dest: 10.0.222.0/24
+        path: [upf-mec-area1, upf-mec-area1]

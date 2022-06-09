@@ -134,25 +134,56 @@ services:
         ipv4_address: 10.0.201.2
         ipv6_address: fd00:d0cc:e700:1111:4::2
 
+#  upf1:
+#    container_name: upf1
+#    hostname: upf1
+#    restart: always
+#    build:
+#      context: ./free5gc
+#      target: free5gc-upf 
+#      args:
+#        F5GC_RELEASE: v3.1.1
+#    image: free5gc-upf
+#    volumes:
+#      - ./config/upf-config.yaml:/etc/upfd/config.yaml:ro
+#      - ./config/upf1-routing.sh:/usr/local/bin/routing.sh:ro
+#    command: -c /etc/upfd/config.yaml
+#    cap_add:
+#      - NET_ADMIN
+#    sysctls:
+#      - net.ipv4.ip_forward=1
+#    environment:
+#      - ROUTING=routing.sh
+#      - CONFIG_FILE=/etc/upfd/config.yaml
+#    networks:
+#      n4-net:
+#        ipv4_address: 10.0.210.3
+#      test-net:
+#        ipv4_address: 10.0.224.2
+#      tn-sliceA-st-net:
+#        ipv4_address: 10.0.216.2
   upf1:
     container_name: upf1
     hostname: upf1
     restart: always
     build:
-      context: ./free5gc
-      target: free5gc-upf 
-      args:
-        F5GC_RELEASE: v3.1.1
-    image: free5gc-upf
+      context: ./nextmn-upf
+      target: nextmn-upf 
+    image: nextmn-upf
+    working_dir: /volume
     volumes:
-      - ./config/upf-config.yaml:/etc/upfd/config.yaml:ro
+      - ../nextmn-upf/config/upf1-testmecupf.yaml:/etc/upfd/config.yaml:ro
       - ./config/upf1-routing.sh:/usr/local/bin/routing.sh:ro
+      - ../nextmn-upf:/volume:ro
     command: -c /etc/upfd/config.yaml
     cap_add:
       - NET_ADMIN
+    devices:
+      - "/dev/net/tun"
     sysctls:
       - net.ipv4.ip_forward=1
     environment:
+      - FORCE_REINSTALL=1
       - ROUTING=routing.sh
       - CONFIG_FILE=/etc/upfd/config.yaml
     networks:
@@ -300,6 +331,44 @@ services:
         ipv6_address: fd00:d0cc:e700:1111:2::3
       tn-sliceA-gw-net:
         ipv4_address: 10.0.215.2
+#  mec-upf1:
+#    container_name: mec-upf1
+#    hostname: mec-upf1
+#    restart: always
+#    depends_on:
+#      - upf1
+#    build:
+#      context: ./nextmn-upf
+#      target: nextmn-upf
+#    image: nextmn-upf
+#    working_dir: /volume
+#    volumes:
+#      - ../nextmn-upf/config/mec-upf-testmecupf.yaml:/etc/upfd/config.yaml:ro
+#      - ./config/mec-upf1-routing.sh:/usr/local/bin/routing.sh:ro
+#      - ../nextmn-upf:/volume:ro
+#    command: -c /etc/upfd/config.yaml
+#    cap_add:
+#      - NET_ADMIN
+#    devices:
+#      - "/dev/net/tun"
+#    sysctls:
+#      - net.ipv4.ip_forward=1
+#      - net.ipv6.conf.all.disable_ipv6=0
+#    environment:
+#      - FORCE_REINSTALL=1
+#      - ROUTING=routing.sh
+#      - CONFIG_FILE=/etc/upfd/config.yaml
+#    networks:
+#      mec-net:
+#        ipv4_address: 10.0.201.3
+#        ipv6_address: fd00:d0cc:e700:1111:4::3
+#      test-mec-net:
+#        ipv4_address: 10.0.223.2
+#      tn-cp-gw-net:
+#        ipv4_address: 10.0.213.3
+#        ipv6_address: fd00:d0cc:e700:1111:2::3
+#      tn-sliceA-gw-net:
+#        ipv4_address: 10.0.215.2
 
   mec-dns:
     container_name: mec-dns
