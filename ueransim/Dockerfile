@@ -12,12 +12,13 @@ RUN ./configure && make && make install
 ### UERANSIM-GNB ###
 FROM louisroyer/base-irit:latest as ueransim-gnb
 RUN apt-get update -q && DEBIAN_FRONTEND=non-interactive apt-get install -qy --no-install-recommends --no-install-suggests \
-    tshark ueransim wireshark-ueransim-rls \
+    tshark wireshark-ueransim-rls \
     lksctp-tools iproute2 ethtool \
     iputils-ping \
     libglib2.0 libgcrypt20 libpcap0.8-dev libssh-4 libc-ares2 liblua5.2-0 \
     && rm -rf /var/lib/apt/lists/*
 COPY ./entrypoint-gnb.sh /usr/local/bin/entrypoint.sh
+COPY ./nr-gnb /usr/local/bin/nr-gnb
 ENV CONFIG_SCRIPT ""
 ENV ROUTING ""
 ENTRYPOINT ["entrypoint.sh"]

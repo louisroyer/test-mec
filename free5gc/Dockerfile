@@ -15,12 +15,39 @@ RUN : ${F5GC_RELEASE:? Missing build-arg F5GC_RELEASE.} && git -C /go/src clone 
 WORKDIR /go/src/free5gc
 RUN make all
 
+#FROM debian:bullseye-slim AS free5gc-upf
+#RUN apt-get update -q && DEBIAN_FRONTEND=non-interactive apt-get install -qy --no-install-recommends --no-install-suggests \
+#    libmnl0 libyaml-0-2 iptables \
+#    iproute2 iputils-ping tshark ethtool \
+#    && rm -rf /var/lib/apt/lists/*
+#COPY --from=builder /go/src/free5gc/NFs/upf/build/bin/free5gc-upfd /usr/local/bin/free5gc-upfd 
+#COPY --from=builder /go/src/free5gc/NFs/upf/build/updk/src/third_party/libgtp5gnl/lib/libgtp5gnl.so.0 /usr/local/lib/libgtp5gnl.so.0
+#COPY --from=builder /go/src/free5gc/NFs/upf/build/utlt_logger/liblogger.so /usr/local/lib/liblogger.so
+#RUN ldconfig
+#COPY ./entrypoint-upf.sh /usr/local/bin/entrypoint.sh
+#ENV ROUTING ""
+#ENV CONFIG_SCRIPT ""
+#ENTRYPOINT ["entrypoint.sh"]
+#CMD ["-h"]
+
+FROM golang:1.17 AS upf-builder
+RUN apt-get update -q && DEBIAN_FRONTEND=non-interactive apt-get install -qy --no-install-recommends --no-install-suggests \
+    autoconf automake cmake gcc libtool pkg-config libmnl-dev libyaml-dev ca-certificates git build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /
+RUN  git -C / clone --depth 1 --quiet -b recoverytimestamp https://github.com/louisroyer/free5gc-upf
+WORKDIR /free5gc-upf
+RUN mkdir build
+WORKDIR /free5gc-upf/build
+RUN   cmake .. && make
+
 FROM debian:bullseye-slim AS free5gc-upf
 RUN apt-get update -q && DEBIAN_FRONTEND=non-interactive apt-get install -qy --no-install-recommends --no-install-suggests \
     libmnl0 libyaml-0-2 iptables \
     iproute2 iputils-ping tshark ethtool \
     && rm -rf /var/lib/apt/lists/*
-COPY --from=builder /go/src/free5gc/NFs/upf/build/bin/free5gc-upfd /usr/local/bin/free5gc-upfd 
+COPY --from=upf-builder /free5gc-upf/build/bin/free5gc-upfd /usr/local/bin/free5gc-upfd 
 COPY --from=builder /go/src/free5gc/NFs/upf/build/updk/src/third_party/libgtp5gnl/lib/libgtp5gnl.so.0 /usr/local/lib/libgtp5gnl.so.0
 COPY --from=builder /go/src/free5gc/NFs/upf/build/utlt_logger/liblogger.so /usr/local/lib/liblogger.so
 RUN ldconfig

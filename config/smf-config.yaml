@@ -82,7 +82,7 @@ configuration:
 
   nrfUri: http://nrf.sbi-net:8000 
     #  locality: loc1
-  ulcl: true
+  ulcl: false
 
 logger:
   SMF:
