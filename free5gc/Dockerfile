@@ -68,11 +68,25 @@ ENV CONFIG_SCRIPT ""
 ENTRYPOINT ["entrypoint.sh"]
 CMD ["-h"]
 
+FROM golang:1.17 AS smf-builder
+RUN apt-get update -q && DEBIAN_FRONTEND=non-interactive apt-get install -qy --no-install-recommends --no-install-suggests \
+    autoconf automake cmake gcc libtool pkg-config libmnl-dev libyaml-dev ca-certificates git build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /
+ENV TMPENV=3
+RUN  git -C / clone --depth 1 --quiet -b pfcp-rules  https://github.com/louisroyer/free5gc-smf
+WORKDIR /free5gc-smf
+RUN mkdir /go/src/free5gc/bin -p
+WORKDIR /free5gc-smf/cmd
+RUN  CGO_ENABLED=0 go build -o /go/src/free5gc/bin/smf main.go
+
+
 FROM debian:bullseye-slim as free5gc-smf
 RUN apt-get update -q && DEBIAN_FRONTEND=non-interactive apt-get install -qy --no-install-recommends --no-install-suggests \
     iproute2 iputils-ping tshark ethtool \
     && rm -rf /var/lib/apt/lists/*
-COPY --from=builder /go/src/free5gc/bin/smf /usr/local/bin/smf
+COPY --from=smf-builder /go/src/free5gc/bin/smf /usr/local/bin/smf
 COPY ./entrypoint-smf.sh /usr/local/bin/entrypoint.sh
 ENV ROUTING ""
 ENV CONFIG_SCRIPT ""
