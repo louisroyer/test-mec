@@ -1,19 +1,20 @@
 FROM golang:1.17 AS builder
 ARG F5GC_RELEASE
 RUN apt-get update -q && DEBIAN_FRONTEND=non-interactive apt-get install -qy --no-install-recommends --no-install-suggests \
-    autoconf automake cmake gcc libtool pkg-config libmnl-dev libyaml-dev ca-certificates \
-    && curl -sL https://deb.nodesource.com/setup_10.x | bash - \
-    && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
-    && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
-    && apt-get update -q \
-    && apt-get install -qy --no-install-recommends --no-install-suggests \
-    nodejs yarn \
+    autoconf automake cmake gcc libtool pkg-config libmnl-dev libyaml-dev \
+#     ca-certificates \
+#    && curl -sL https://deb.nodesource.com/setup_10.x | bash - \
+#    && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
+#    && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
+#    && apt-get update -q \
+#    && apt-get install -qy --no-install-recommends --no-install-suggests \
+#    nodejs yarn \
     && rm -rf /var/lib/apt/lists/*
 
 RUN : ${F5GC_RELEASE:? Missing build-arg F5GC_RELEASE.} && git -C /go/src clone -b $F5GC_RELEASE --depth 1 --shallow-submodules --recursive --quiet -j $(nproc) https://github.com/free5gc/free5gc
 
 WORKDIR /go/src/free5gc
-RUN make all
+RUN make nfs
 
 #FROM debian:bullseye-slim AS free5gc-upf
 #RUN apt-get update -q && DEBIAN_FRONTEND=non-interactive apt-get install -qy --no-install-recommends --no-install-suggests \
@@ -129,9 +130,9 @@ COPY --from=builder /go/src/free5gc/bin/udr /usr/local/bin/udr
 ENTRYPOINT ["udr"]
 CMD ["-h"]
 
-FROM debian:bullseye-slim as free5gc-webui
-COPY --from=builder /go/src/free5gc/webconsole/bin/webconsole /usr/local/bin/webconsole
-RUN mkdir webconsole
-COPY --from=builder /go/src/free5gc/webconsole/public webconsole/public
-ENTRYPOINT ["webconsole"]
-CMD ["-h"]
+#FROM debian:bullseye-slim as free5gc-webui
+#COPY --from=builder /go/src/free5gc/webconsole/bin/webconsole /usr/local/bin/webconsole
+#RUN mkdir webconsole
+#COPY --from=builder /go/src/free5gc/webconsole/public webconsole/public
+#ENTRYPOINT ["webconsole"]
+#CMD ["-h"]
