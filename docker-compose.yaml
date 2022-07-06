@@ -1,5 +1,12 @@
 version: "3.9"
 
+x-debug: &debug
+  image: louisroyer/network-debug
+  cap_add:
+    - NET_ADMIN
+  profiles:
+    - debug
+
 x-ue-environment: &ue-environment
   MCC: "001"
   MNC: "01"
@@ -43,6 +50,10 @@ services:
     environment:
       <<: *ue-environment
       MSISDN: "0000000000"
+  ue1-debug:
+    <<: *debug
+    container_name: ue1-debug
+    network_mode: service:ue1
 
   ue2:
     <<: *ue
@@ -51,6 +62,10 @@ services:
     environment:
       <<: *ue-environment
       MSISDN: "0000000001"
+  ue2-debug:
+    <<: *debug
+    container_name: ue2-debug
+    network_mode: service:ue2
 
   gnb1:
     container_name: gnb1
