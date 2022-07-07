@@ -1,7 +1,8 @@
 DEBUG = --profile debug
 DC = docker compose
 EXEC = docker exec -it
-.PHONY: default u d t
+LOG = docker logs
+.PHONY: default u d t l lf
 default: u
 u:
 	$(DC) $(DEBUG) up -d
@@ -10,3 +11,7 @@ d:
 
 t/%:
 	$(EXEC) $(@F)-debug bash
+l/%:
+	$(LOG) $(@F)
+lf/%:
+	$(LOG) $(@F) -f

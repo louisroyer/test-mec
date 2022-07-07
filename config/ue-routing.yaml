@@ -6,8 +6,8 @@ ueRoutingInfo: # the list of UE routing information
 
   MEH:
     members:
-      - imsi-001010000000000
       - imsi-001010000000001
+      - imsi-001010000000002
 
     topology:
       - A: ran-area1-1
@@ -19,3 +19,15 @@ ueRoutingInfo: # the list of UE routing information
         path: [upf-mec-area1]
       - dest: 10.0.222.0/24
         path: [upf-mec-area1]
+
+  NO-MEH:
+    members:
+      - imsi-001010000000003
+      - imsi-001010000000004
+    topology:
+      - A: ran-area1-2
+        B: upf-mec-area2
+      - A: upf-mec-area2
+        B: upf-sliceB
+    specificPath:
+

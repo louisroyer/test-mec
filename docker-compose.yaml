@@ -1,624 +1,713 @@
 version: "3.9"
+x-define:
+  x-debug:
+    x-debug-common: &debug-common
+      image: louisroyer/network-debug
+      cap_add:
+        - NET_ADMIN
+      profiles:
+        - debug
+  x-ue:
+    x-ue-environment-common: &ue-environment-common
+      MCC: "001"
+      MNC: "01"
+      GNBS: |-
+        - "10.0.200.130"
+        - "10.0.200.131"
+        - "fd00:d0cc:e700:1111:1:8000:0:2"
+        - "fd00:d0cc:e700:1111:1:8000:0:3"
+    x-ue-environment-sliceA: &ue-environment-sliceA
+      <<: *ue-environment-common
+      CONFIGURED_NSSAI: |-
+        - sst: 1
+          sd: 0x010203
+      DEFAULT_NSSAI: |-
+        - sst: 1
+          ds: 0x010203
+      SESSIONS: |-
+        - type: "IPv4"
+          apn: "sliceA"
+          slice:
+            sst: 1
+            sd: 0x010203
+    x-ue-environment-sliceB: &ue-environment-sliceB
+      <<: *ue-environment-common
+      CONFIGURED_NSSAI: |-
+        - sst: 1
+          sd: 0x112233
+      DEFAULT_NSSAI: |-
+        - sst: 1
+          ds: 0x112233
+      SESSIONS: |-
+        - type: "IPv4"
+          apn: "sliceB"
+          slice:
+            sst: 1
+            sd: 0x112233
+    x-ue-common: &ue-common
+      image: louisroyer/ueransim-ue
+      cap_add:
+        - NET_ADMIN
+      devices:
+        - "/dev/net/tun:/dev/net/tun"
+      sysctls:
+        - net.ipv6.conf.all.disable_ipv6=0
+      dns:
+        - 10.0.224.3
+      command: [" "]
+      networks:
+        ran-net: # automatic allocation for UEs
 
-x-debug: &debug
-  image: louisroyer/network-debug
-  cap_add:
-    - NET_ADMIN
-  profiles:
-    - debug
+x-group:
+  x-group-ue: &group-ue # ue1, ue2, ue3, ue4 + debug
+    ue1:
+      <<: *ue-common
+      container_name: ue1
+      hostname: ue1
+      environment:
+        <<: *ue-environment-sliceA
+        MSISDN: "0000000001"
+    ue1-debug:
+      <<: *debug-common
+      container_name: ue1-debug
+      network_mode: service:ue1
+    ue2:
+      <<: *ue-common
+      container_name: ue2
+      hostname: ue2
+      environment:
+        <<: *ue-environment-sliceA
+        MSISDN: "0000000002"
+    ue2-debug:
+      <<: *debug-common
+      container_name: ue2-debug
+      network_mode: service:ue2
+    ue3:
+      <<: *ue-common
+      container_name: ue3
+      hostname: ue3
+      environment:
+        <<: *ue-environment-sliceB
+        MSISDN: "0000000003"
+    ue3-debug:
+      <<: *debug-common
+      container_name: ue3-debug
+      network_mode: service:ue3
+    ue4:
+      <<: *ue-common
+      container_name: ue4
+      hostname: ue4
+      environment:
+        <<: *ue-environment-sliceB
+        MSISDN: "0000000004"
+    ue4-debug:
+      <<: *debug-common
+      container_name: ue4-debug
+      network_mode: service:ue4
+  x-group-gnb: &group-gnb # gnb1, gnb2
+    gnb1:
+      container_name: gnb1
+      hostname: gnb1
+      depends_on:
+        - mec-upf1
+        - amf1
+      build:
+        context: ./ueransim
+        target: ueransim-gnb
+        args:
+          IPERF2_RELEASE: 2-1-4
+      image: ueransim-gnb
+      volumes:
+        - ./config/templates/config-gnb.yaml:/etc/ueransim/config-template.yaml:ro
+        - ./config/templates/scripts/config-gnb.sh:/usr/local/bin/config.sh:ro
+        - ./config/routing-gnb.sh:/usr/local/bin/routing.sh:ro
+      command: -c /etc/ueransim/config.yaml
+      cap_add:
+        - NET_ADMIN
+      sysctls:
+        - net.ipv6.conf.all.disable_ipv6=0
+      environment:
+        - ROUTING=routing.sh
+        - CONFIG_SCRIPT=config.sh
+        - TEMPLATE=/etc/ueransim/config-template.yaml
+        - CONFIG_FILE=/etc/ueransim/config.yaml
+        - MCC=001
+        - MNC=01
+        - NCI=0x000000010
+        - LINK_IP=fd00:d0cc:e700:1111:1:8000:0:2
+          #- LINK_IP=10.0.200.130
+        - NGAP_IP=10.0.213.2
+          #- NGAP_IP=fd00:d0cc:e700:1111:2::2
+        - GTP_IP=10.0.201.2
+          #- GTP_IP=fd00:d0cc:e700:1111:4::2
+        - AMF_IP=10.0.214.3
+            #- AMF_IP=fd00:d0cc:e700:1111:3::3
+        - SST_LIST=1
+        - SD_LIST=0x010203
+        - TAC=1
+      networks:
+        ran-net:
+          ipv4_address: 10.0.200.130
+          ipv6_address: fd00:d0cc:e700:1111:1:8000:0:2
+        tn-cp-gw-net:
+          ipv4_address: 10.0.213.2
+          ipv6_address: fd00:d0cc:e700:1111:2::2
+        mec-net:
+          ipv4_address: 10.0.201.2
+          ipv6_address: fd00:d0cc:e700:1111:4::2
+    gnb2:
+      container_name: gnb2
+      hostname: gnb2
+      depends_on:
+        - mec-upf2
+        - amf1
+      build:
+        context: ./ueransim
+        target: ueransim-gnb
+        args:
+          IPERF2_RELEASE: 2-1-4
+      image: ueransim-gnb
+      volumes:
+        - ./config/templates/config-gnb.yaml:/etc/ueransim/config-template.yaml:ro
+        - ./config/templates/scripts/config-gnb.sh:/usr/local/bin/config.sh:ro
+        - ./config/routing-gnb.sh:/usr/local/bin/routing.sh:ro
+      command: -c /etc/ueransim/config.yaml
+      cap_add:
+        - NET_ADMIN
+      sysctls:
+        - net.ipv6.conf.all.disable_ipv6=0
+      environment:
+        - ROUTING=routing.sh
+        - CONFIG_SCRIPT=config.sh
+        - TEMPLATE=/etc/ueransim/config-template.yaml
+        - CONFIG_FILE=/etc/ueransim/config.yaml
+        - MCC=001
+        - MNC=01
+        - NCI=0x000000010
+        - LINK_IP=fd00:d0cc:e700:1111:1:8000:0:3
+          #- LINK_IP=10.0.200.130
+        - NGAP_IP=10.0.213.5
+          #- NGAP_IP=fd00:d0cc:e700:1111:2::5
+        - GTP_IP=10.0.201.4
+          #- GTP_IP=fd00:d0cc:e700:1111:4::4
+        - AMF_IP=10.0.214.3
+            #- AMF_IP=fd00:d0cc:e700:1111:3::3
+        - SST_LIST=1
+        - SD_LIST=0x112233
+        - TAC=1
+      networks:
+        ran-net:
+          ipv4_address: 10.0.200.131
+          ipv6_address: fd00:d0cc:e700:1111:1:8000:0:3
+        tn-cp-gw-net:
+          ipv4_address: 10.0.213.5
+          ipv6_address: fd00:d0cc:e700:1111:2::5
+        mec-net:
+          ipv4_address: 10.0.201.4
+          ipv6_address: fd00:d0cc:e700:1111:4::4
+  x-group-upf-i: &group-upf-i # mec-upf1, mec-upf2
+    mec-upf1:
+      container_name: mec-upf1
+      hostname: mec-upf1
+      restart: always
+      depends_on:
+        - upf1
+      build:
+        context: ./nextmn-upf
+        target: nextmn-upf
+      image: nextmn-upf
+      working_dir: /volume
+      volumes:
+        - ../nextmn-upf/config/mec-upf-testmecupf.yaml:/etc/upfd/config.yaml:ro
+        - ./config/mec-upf1-routing.sh:/usr/local/bin/routing.sh:ro
+        - ../nextmn-upf:/volume:ro
+      command: -c /etc/upfd/config.yaml
+      cap_add:
+        - NET_ADMIN
+      devices:
+        - "/dev/net/tun"
+      sysctls:
+        - net.ipv4.ip_forward=1
+        - net.ipv6.conf.all.disable_ipv6=0
+      environment:
+        - FORCE_REINSTALL=1
+        - ROUTING=routing.sh
+        - CONFIG_FILE=/etc/upfd/config.yaml
+      networks:
+        mec-net:
+          ipv4_address: 10.0.201.3
+          ipv6_address: fd00:d0cc:e700:1111:4::3
+        test-mec-net:
+          ipv4_address: 10.0.223.2
+        tn-cp-gw-net:
+          ipv4_address: 10.0.213.3
+          ipv6_address: fd00:d0cc:e700:1111:2::3
+        tn-sliceA-gw-net:
+          ipv4_address: 10.0.215.2
+    mec-upf2:
+      container_name: mec-upf2
+      hostname: mec-upf2
+      restart: always
+      depends_on:
+        - upf2
+      build:
+        context: ./nextmn-upf
+        target: nextmn-upf
+      image: nextmn-upf
+      working_dir: /volume
+      volumes:
+        - ../nextmn-upf/config/mec-upf2-testmecupf.yaml:/etc/upfd/config.yaml:ro
+        - ./config/mec-upf2-routing.sh:/usr/local/bin/routing.sh:ro
+        - ../nextmn-upf:/volume:ro
+      command: -c /etc/upfd/config.yaml
+      cap_add:
+        - NET_ADMIN
+      devices:
+        - "/dev/net/tun"
+      sysctls:
+        - net.ipv4.ip_forward=1
+        - net.ipv6.conf.all.disable_ipv6=0
+      environment:
+        - FORCE_REINSTALL=1
+        - ROUTING=routing.sh
+        - CONFIG_FILE=/etc/upfd/config.yaml
+      networks:
+        mec-net:
+          ipv4_address: 10.0.201.5
+          ipv6_address: fd00:d0cc:e700:1111:4::5
+        tn-cp-gw-net:
+          ipv4_address: 10.0.213.6
+          ipv6_address: fd00:d0cc:e700:1111:2::6
+        tn-sliceA-gw-net:
+          ipv4_address: 10.0.215.4
+  x-group-upf-a: &group-upf-a # upf1, upf2
+    upf1:
+      container_name: upf1
+      hostname: upf1
+      restart: always
+      build:
+        context: ./nextmn-upf
+        target: nextmn-upf 
+      image: nextmn-upf
+      working_dir: /volume
+      volumes:
+        - ../nextmn-upf/config/upf1-testmecupf.yaml:/etc/upfd/config.yaml:ro
+        - ./config/upf1-routing.sh:/usr/local/bin/routing.sh:ro
+        - ../nextmn-upf:/volume:ro
+      command: -c /etc/upfd/config.yaml
+      cap_add:
+        - NET_ADMIN
+      devices:
+        - "/dev/net/tun"
+      sysctls:
+        - net.ipv4.ip_forward=1
+      environment:
+        - FORCE_REINSTALL=1
+        - ROUTING=routing.sh
+        - CONFIG_FILE=/etc/upfd/config.yaml
+      networks:
+        n4-net:
+          ipv4_address: 10.0.210.3
+        test-net:
+          ipv4_address: 10.0.224.2
+        tn-sliceA-st-net:
+          ipv4_address: 10.0.216.2
+    upf2:
+      container_name: upf2
+      hostname: upf2
+      restart: always
+      build:
+        context: ./nextmn-upf
+        target: nextmn-upf 
+      image: nextmn-upf
+      working_dir: /volume
+      volumes:
+        - ../nextmn-upf/config/upf2-testmecupf.yaml:/etc/upfd/config.yaml:ro
+        - ./config/upf1-routing.sh:/usr/local/bin/routing.sh:ro
+        - ../nextmn-upf:/volume:ro
+      command: -c /etc/upfd/config.yaml
+      cap_add:
+        - NET_ADMIN
+      devices:
+        - "/dev/net/tun"
+      sysctls:
+        - net.ipv4.ip_forward=1
+      environment:
+        - FORCE_REINSTALL=1
+        - ROUTING=routing.sh
+        - CONFIG_FILE=/etc/upfd/config.yaml
+      networks:
+        n4-net:
+          ipv4_address: 10.0.210.5
+        test-net:
+          ipv4_address: 10.0.224.4
+        tn-sliceA-st-net:
+          ipv4_address: 10.0.216.4
+  x-group-core-network-aux-nf: &group-core-network-aux-nf # f5gc-populate, nrf, mongodb, ausf, nssf, udm, upr, pcf
+    free5gc-populate:
+      container_name: free5gc-populate
+      hostname: free5gc-populate
+      depends_on:
+        - mongodb-f5gc
+      build:
+        context: ./free5gc-populate
+        args:
+          F5GCPOPULATE_RELEASE: 3f4c8b1
+      volumes:
+        - ./config/populate-config.yaml:/etc/free5gc-populate/config.yaml:ro
+      command: --config /etc/free5gc-populate/config.yaml
+      image: free5gc-populate
+      networks:
+        db-net:
+    nrf:
+      container_name: nrf
+      hostname: nrf
+      restart: always
+      depends_on:
+        - mongodb-f5gc
+      build:
+        context: ./free5gc
+        target: free5gc-nrf
+        args:
+          F5GC_RELEASE: v3.2.0
+      image: free5gc-nrf
+      volumes:
+        - ./config/nrf-config.yaml:/etc/nrf/config.yaml:ro
+      command: --config /etc/nrf/config.yaml
+      networks:
+        db-net:
+        sbi-net:
+          ipv4_address: 10.0.211.2
+    mongodb-f5gc:
+      image: mongo
+      container_name: mongodb-f5gc
+      hostname: mongodb-f5gc
+      command: mongod --port 27017 --bind_ip_all
+      volumes:
+        - ./f5gc-dbdata:/data/db
+      restart: always
+      networks:
+        db-net:
+    ausf:
+      container_name: ausf
+      hostname: ausf
+      restart: always
+      depends_on:
+        - nrf
+      build:
+        context: ./free5gc
+        target: free5gc-ausf
+        args:
+          F5GC_RELEASE: v3.2.0
+      image: free5gc-ausf
+      volumes:
+        - ./config/ausf-config.yaml:/etc/ausf/config.yaml:ro
+      command: --config /etc/ausf/config.yaml
+      networks:
+        sbi-net:
+          ipv4_address: 10.0.211.5
+    nssf:
+      container_name: nssf 
+      hostname: nssf
+      restart: always
+      depends_on:
+        - nrf
+      build:
+        context: ./free5gc
+        target: free5gc-nssf
+        args:
+          F5GC_RELEASE: v3.2.0
+      image: free5gc-nssf
+      volumes:
+        - ./config/nssf-config.yaml:/etc/nssf/config.yaml:ro
+      command: --config /etc/nssf/config.yaml
+      networks:
+        sbi-net:
+          ipv4_address: 10.0.211.6
+    udm:
+      container_name: udm 
+      hostname: udm
+      restart: always
+      depends_on:
+        - nrf
+      build:
+        context: ./free5gc
+        target: free5gc-udm
+        args:
+          F5GC_RELEASE: v3.2.0
+      image: free5gc-udm
+      volumes:
+        - ./config/udm-config.yaml:/etc/udm/config.yaml:ro
+      command: --config /etc/udm/config.yaml
+      networks:
+        sbi-net:
+          ipv4_address: 10.0.211.7
+    udr:
+      container_name: udr 
+      hostname: udr
+      restart: always
+      depends_on:
+        - nrf
+      build:
+        context: ./free5gc
+        target: free5gc-udr
+        args:
+          F5GC_RELEASE: v3.2.0
+      image: free5gc-udr
+      volumes:
+        - ./config/udr-config.yaml:/etc/udr/config.yaml:ro
+      command: --config /etc/udr/config.yaml
+      networks:
+        db-net:
+        sbi-net:
+          ipv4_address: 10.0.211.8
+    pcf:
+      container_name: pcf
+      hostname: pcf
+      restart: always
+      depends_on:
+        - nrf
+      build:
+        context: ./free5gc
+        target: free5gc-pcf
+        args:
+          F5GC_RELEASE: v3.2.0
+      image: free5gc-pcf
+      volumes:
+        - ./config/pcf-config.yaml:/etc/pcf/config.yaml:ro
+      command: --config /etc/pcf/config.yaml
+      networks:
+        db-net:
+        sbi-net:
+          ipv4_address: 10.0.211.9
+  x-group-core-network-main-nf: &group-core-network-main-nf # amf, smf
+    amf1:
+      container_name: amf1
+      hostname: amf1
+      restart: always
+      depends_on:
+        - nrf
+      build:
+        context: ./free5gc
+        target: free5gc-amf
+        args:
+          F5GC_RELEASE: v3.2.0
+      image: free5gc-amf
+      volumes:
+        - ./config/templates/config-amf.yaml:/etc/amf/config-template.yaml:ro
+        - ./config/templates/scripts/config-amf.sh:/usr/local/bin/config.sh:ro
+        - ./config/routing-amf.sh:/usr/local/bin/routing.sh:ro
+      command: --config /etc/amf/config.yaml
+      cap_add:
+        - NET_ADMIN
+      sysctls:
+        - net.ipv6.conf.all.disable_ipv6=0
+      environment:
+        ROUTING: "routing.sh"
+        TEMPLATE: "/etc/amf/config-template.yaml"
+        CONFIG_FILE: "/etc/amf/config.yaml"
+        CONFIG_SCRIPT: "config.sh"
+        NGAP_IP: "10.0.214.3"
+        #NGAP_IP: "fd00:d0cc:e700:1111:3::3"
+        SBI_REGISTER_IP: "amf1.sbi-net"
+        SBI_BINDING_IP: "10.0.211.4"
+        MCC: "001"
+        MNC: "01"
+        AMF_ID: "000001"
+        AMF_NAME: "AMF1"
+        NRF_URI: "http://nrf.sbi-net:8000"
+        DNN_LIST: "sliceA sliceB"
+        SST_LIST: "1 1"
+        SD_LIST: "010203 112233"
+        TAC: "1"
+        LOCALITY: "loc1"
+      networks:
+        sbi-net:
+          ipv4_address: 10.0.211.4
+        tn-cp-st-net:
+          ipv4_address: 10.0.214.3
+          ipv6_address: fd00:d0cc:e700:1111:3::3
 
-x-ue-environment: &ue-environment
-  MCC: "001"
-  MNC: "01"
-  GNBS: |-
-    - "10.0.200.130"
-    - "fd00:d0cc:e700:1111:1:8000:0:2"
-  SESSIONS: |-
-    - type: "IPv4"
-      apn: "sliceA"
-      slice:
-        sst: 1
-        sd: 0x010203
-  CONFIGURED_NSSAI: |-
-    - sst: 1
-      sd: 0x010203
-  DEFAULT_NSSAI: |-
-    - sst: 1
-      ds: 0x010203
-
-x-ue: &ue
-  image: louisroyer/ueransim-ue
-  cap_add:
-    - NET_ADMIN
-  devices:
-    - "/dev/net/tun:/dev/net/tun"
-  sysctls:
-    - net.ipv6.conf.all.disable_ipv6=0
-  dns:
-    - 10.0.224.3
-  command: [" "]
-  environment:
-    <<: *ue-environment
-  networks:
-    ran-net: # automatic allocation for UEs
+    smf1:
+      container_name: smf1
+      hostname: smf1
+      restart: always
+      depends_on:
+        - mec-upf1
+        - upf1
+        - nrf
+      build:
+        context: ./free5gc
+        target: free5gc-smf
+        args:
+          F5GC_RELEASE: v3.2.0
+      image: free5gc-smf
+      volumes:
+        - ./config/smf-config.yaml:/etc/smf/smf-config.yaml:ro
+        - ./config/ue-routing.yaml:/etc/smf/ue-routing.yaml:ro
+        - ./config/routing-smf.sh:/usr/local/bin/routing.sh:ro
+      environment:
+        - ROUTING=routing.sh
+      cap_add:
+        - NET_ADMIN
+      command: --config /etc/smf/smf-config.yaml --uerouting /etc/smf/ue-routing.yaml
+      networks:
+        n4-net:
+          ipv4_address: 10.0.210.2
+        sbi-net:
+          ipv4_address: 10.0.211.3
+  x-group-trunks: &group-trunks # trunks-cp, trunks-up, trunks-mec, st-router
+    cp-st-router:
+      container_name: cp-st-router
+      hostname: cp-st-router
+      restart: always
+      build:
+        context: ./router
+      image: router
+      volumes:
+        - ./config/routing-cp-st-router.sh:/usr/local/bin/routing.sh:ro
+      environment:
+        - ROUTING=routing.sh
+      cap_add:
+        - NET_ADMIN
+      sysctls:
+        - net.ipv4.ip_forward=1
+      networks:
+        tn-cp-st-net:
+          ipv4_address: 10.0.214.2
+          ipv6_address: fd00:d0cc:e700:1111:3::2
+        n4-net:
+          ipv4_address: 10.0.210.4
+    trunks-cp:
+      container_name: trunks-cp
+      hostname: trunks-cp
+      restart: always
+      image: trunks
+      build:
+        context: ./trunks
+        args:
+          TRUNKS_RELEASE: V2.0.1
+      command: --config /etc/trunks/trunks.yaml --acm
+      volumes:
+        - ./config/trunks-cp.yaml:/etc/trunks/trunks.yaml:ro
+        - ./config/routing-trunk-cp.sh:/usr/local/bin/routing.sh:ro
+      environment:
+        - ROUTING=routing.sh
+      cap_add:
+        - NET_ADMIN
+      sysctls:
+        - net.ipv4.ip_forward=1
+        - net.ipv6.conf.all.disable_ipv6=0
+        - net.ipv6.conf.all.forwarding=1
+      networks:
+        tn-cp-st-net:
+          ipv4_address: 10.0.214.4
+          ipv6_address: fd00:d0cc:e700:1111:3::4
+        tn-cp-gw-net:
+          ipv4_address: 10.0.213.4
+          ipv6_address: fd00:d0cc:e700:1111:2::4
+    trunks-up:
+      container_name: trunks-up
+      hostname: trunks-up
+      restart: always
+      image: trunks
+      build:
+        context: ./trunks
+        args:
+          TRUNKS_RELEASE: V2.0.1
+      command: --config /etc/trunks/trunks.yaml --acm
+      volumes:
+        - ./config/trunks-up.yaml:/etc/trunks/trunks.yaml:ro
+        - ./config/routing-trunk-up.sh:/usr/local/bin/routing.sh:ro
+      environment:
+        - ROUTING=routing.sh
+      cap_add:
+        - NET_ADMIN
+      sysctls:
+        - net.ipv4.ip_forward=1
+      networks:
+        tn-sliceA-st-net:
+          ipv4_address: 10.0.216.3
+        tn-sliceA-gw-net:
+          ipv4_address: 10.0.215.3
+    trunks-mec:
+      container_name: trunks-mec
+      hostname: trunks-mec
+      restart: always
+      image: trunks
+      build:
+        context: ./trunks
+        args:
+          TRUNKS_RELEASE: V2.0.1
+      command: --config /etc/trunks/trunks.yaml --acm
+      volumes:
+        - ./config/trunks-mec.yaml:/etc/trunks/trunks.yaml:ro
+        - ./config/routing-trunk-mec.sh:/usr/local/bin/routing.sh:ro
+      environment:
+        - ROUTING=routing.sh
+      cap_add:
+        - NET_ADMIN
+      sysctls:
+        - net.ipv4.ip_forward=1
+      networks:
+        tn-mec-st-net:
+          ipv4_address: 10.0.218.3
+        tn-mec-gw-net:
+          ipv4_address: 10.0.217.3
+  x-group-mec-dn: &group-mec-dn # mec-dns
+    mec-dns:
+      container_name: mec-dns
+      hostname: mec-dns
+      image: bind9
+      build:
+        context: ./bind9
+      command: -g -p 53
+      volumes:
+        - ./bind9/named.conf.options:/etc/bind/named.conf.options:ro
+        - ./config/routing-mec-dns.sh:/usr/local/bin/routing.sh:ro
+      environment:
+        - ROUTING=routing.sh
+      cap_add:
+        - NET_ADMIN
+      networks:
+        test-mec-net:
+          ipv4_address: 10.0.223.3
+        tn-mec-gw-net:
+          ipv4_address: 10.0.217.2
+  x-group-internet-dn: &group-internet-dn # dns
+    dns:
+      container_name: dns
+      hostname: dns
+      image: bind9
+      build:
+        context: ./bind9
+      command: -g -p 53
+      cap_add:
+        - NET_ADMIN
+      volumes:
+        - ./bind9-cache:/var/cache/bind
+        - ./bind9/named.conf.local:/etc/bind/named.conf.local:ro
+        - ./bind9/mno-named.conf.options:/etc/bind/named.conf.options:ro
+        - ./bind9/test.db:/etc/bind/zones/test.db:ro
+        - ./config/routing-dns.sh:/usr/local/bin/routing.sh:ro
+      environment:
+        - ROUTING=routing.sh
+      networks:
+        test-net:
+          ipv4_address: 10.0.224.3
+        tn-mec-st-net:
+          ipv4_address: 10.0.218.2
 
 services:
-  ue1:
-    <<: *ue
-    container_name: ue1
-    hostname: ue1
-    environment:
-      <<: *ue-environment
-      MSISDN: "0000000000"
-  ue1-debug:
-    <<: *debug
-    container_name: ue1-debug
-    network_mode: service:ue1
-
-  ue2:
-    <<: *ue
-    container_name: ue2
-    hostname: ue2
-    environment:
-      <<: *ue-environment
-      MSISDN: "0000000001"
-  ue2-debug:
-    <<: *debug
-    container_name: ue2-debug
-    network_mode: service:ue2
-
-  gnb1:
-    container_name: gnb1
-    hostname: gnb1
-    depends_on:
-      - mec-upf1
-      - amf1
-    build:
-      context: ./ueransim
-      target: ueransim-gnb
-      args:
-        IPERF2_RELEASE: 2-1-4
-    image: ueransim-gnb
-    volumes:
-      - ./config/templates/config-gnb.yaml:/etc/ueransim/config-template.yaml:ro
-      - ./config/templates/scripts/config-gnb.sh:/usr/local/bin/config.sh:ro
-      - ./config/routing-gnb.sh:/usr/local/bin/routing.sh:ro
-    command: -c /etc/ueransim/config.yaml
-    cap_add:
-      - NET_ADMIN
-    sysctls:
-      - net.ipv6.conf.all.disable_ipv6=0
-    environment:
-      - ROUTING=routing.sh
-      - CONFIG_SCRIPT=config.sh
-      - TEMPLATE=/etc/ueransim/config-template.yaml
-      - CONFIG_FILE=/etc/ueransim/config.yaml
-      - MCC=001
-      - MNC=01
-      - NCI=0x000000010
-      - LINK_IP=fd00:d0cc:e700:1111:1:8000:0:2
-        #- LINK_IP=10.0.200.130
-      - NGAP_IP=10.0.213.2
-        #- NGAP_IP=fd00:d0cc:e700:1111:2::2
-      - GTP_IP=10.0.201.2
-        #- GTP_IP=fd00:d0cc:e700:1111:4::2
-      - AMF_IP=10.0.214.3
-          #- AMF_IP=fd00:d0cc:e700:1111:3::3
-      - SST_LIST=1
-      - SD_LIST=0x010203
-      - TAC=1
-    networks:
-      ran-net:
-        ipv4_address: 10.0.200.130
-        ipv6_address: fd00:d0cc:e700:1111:1:8000:0:2
-      tn-cp-gw-net:
-        ipv4_address: 10.0.213.2
-        ipv6_address: fd00:d0cc:e700:1111:2::2
-      mec-net:
-        ipv4_address: 10.0.201.2
-        ipv6_address: fd00:d0cc:e700:1111:4::2
-
-#  upf1:
-#    container_name: upf1
-#    hostname: upf1
-#    restart: always
-#    build:
-#      context: ./free5gc
-#      target: free5gc-upf 
-#      args:
-#        F5GC_RELEASE: v3.1.1
-#    image: free5gc-upf
-#    volumes:
-#      - ./config/upf-config.yaml:/etc/upfd/config.yaml:ro
-#      - ./config/upf1-routing.sh:/usr/local/bin/routing.sh:ro
-#    command: -c /etc/upfd/config.yaml
-#    cap_add:
-#      - NET_ADMIN
-#    sysctls:
-#      - net.ipv4.ip_forward=1
-#    environment:
-#      - ROUTING=routing.sh
-#      - CONFIG_FILE=/etc/upfd/config.yaml
-#    networks:
-#      n4-net:
-#        ipv4_address: 10.0.210.3
-#      test-net:
-#        ipv4_address: 10.0.224.2
-#      tn-sliceA-st-net:
-#        ipv4_address: 10.0.216.2
-  upf1:
-    container_name: upf1
-    hostname: upf1
-    restart: always
-    build:
-      context: ./nextmn-upf
-      target: nextmn-upf 
-    image: nextmn-upf
-    working_dir: /volume
-    volumes:
-      - ../nextmn-upf/config/upf1-testmecupf.yaml:/etc/upfd/config.yaml:ro
-      - ./config/upf1-routing.sh:/usr/local/bin/routing.sh:ro
-      - ../nextmn-upf:/volume:ro
-    command: -c /etc/upfd/config.yaml
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - "/dev/net/tun"
-    sysctls:
-      - net.ipv4.ip_forward=1
-    environment:
-      - FORCE_REINSTALL=1
-      - ROUTING=routing.sh
-      - CONFIG_FILE=/etc/upfd/config.yaml
-    networks:
-      n4-net:
-        ipv4_address: 10.0.210.3
-      test-net:
-        ipv4_address: 10.0.224.2
-      tn-sliceA-st-net:
-        ipv4_address: 10.0.216.2
-
-  dns:
-    container_name: dns
-    hostname: dns
-    image: bind9
-    build:
-      context: ./bind9
-    command: -g -p 53
-    cap_add:
-      - NET_ADMIN
-    volumes:
-      - ./bind9-cache:/var/cache/bind
-      - ./bind9/named.conf.local:/etc/bind/named.conf.local:ro
-      - ./bind9/mno-named.conf.options:/etc/bind/named.conf.options:ro
-      - ./bind9/test.db:/etc/bind/zones/test.db:ro
-      - ./config/routing-dns.sh:/usr/local/bin/routing.sh:ro
-    environment:
-      - ROUTING=routing.sh
-    networks:
-      test-net:
-        ipv4_address: 10.0.224.3
-      tn-mec-st-net:
-        ipv4_address: 10.0.218.2
-
-  trunks-cp:
-    container_name: trunks-cp
-    hostname: trunks-cp
-    restart: always
-    image: trunks
-    build:
-      context: ./trunks
-      args:
-        TRUNKS_RELEASE: V2.0.1
-    command: --config /etc/trunks/trunks.yaml --acm
-    volumes:
-      - ./config/trunks-cp.yaml:/etc/trunks/trunks.yaml:ro
-      - ./config/routing-trunk-cp.sh:/usr/local/bin/routing.sh:ro
-    environment:
-      - ROUTING=routing.sh
-    cap_add:
-      - NET_ADMIN
-    sysctls:
-      - net.ipv4.ip_forward=1
-      - net.ipv6.conf.all.disable_ipv6=0
-      - net.ipv6.conf.all.forwarding=1
-    networks:
-      tn-cp-st-net:
-        ipv4_address: 10.0.214.4
-        ipv6_address: fd00:d0cc:e700:1111:3::4
-      tn-cp-gw-net:
-        ipv4_address: 10.0.213.4
-        ipv6_address: fd00:d0cc:e700:1111:2::4
-
-  trunks-up:
-    container_name: trunks-up
-    hostname: trunks-up
-    restart: always
-    image: trunks
-    build:
-      context: ./trunks
-      args:
-        TRUNKS_RELEASE: V2.0.1
-    command: --config /etc/trunks/trunks.yaml --acm
-    volumes:
-      - ./config/trunks-up.yaml:/etc/trunks/trunks.yaml:ro
-      - ./config/routing-trunk-up.sh:/usr/local/bin/routing.sh:ro
-    environment:
-      - ROUTING=routing.sh
-    cap_add:
-      - NET_ADMIN
-    sysctls:
-      - net.ipv4.ip_forward=1
-    networks:
-      tn-sliceA-st-net:
-        ipv4_address: 10.0.216.3
-      tn-sliceA-gw-net:
-        ipv4_address: 10.0.215.3
-
-  trunks-mec:
-    container_name: trunks-mec
-    hostname: trunks-mec
-    restart: always
-    image: trunks
-    build:
-      context: ./trunks
-      args:
-        TRUNKS_RELEASE: V2.0.1
-    command: --config /etc/trunks/trunks.yaml --acm
-    volumes:
-      - ./config/trunks-mec.yaml:/etc/trunks/trunks.yaml:ro
-      - ./config/routing-trunk-mec.sh:/usr/local/bin/routing.sh:ro
-    environment:
-      - ROUTING=routing.sh
-    cap_add:
-      - NET_ADMIN
-    sysctls:
-      - net.ipv4.ip_forward=1
-    networks:
-      tn-mec-st-net:
-        ipv4_address: 10.0.218.3
-      tn-mec-gw-net:
-        ipv4_address: 10.0.217.3
-
-#  mec-upf1:
-#    container_name: mec-upf1
-#    hostname: mec-upf1
-#    restart: always
-#    depends_on:
-#      - upf1
-#    build:
-#      context: ./free5gc
-#      target: free5gc-upf 
-#      args:
-#        F5GC_RELEASE: v3.1.1
-#    image: free5gc-upf
-#    volumes:
-#      - ./config/mec-upf-config.yaml:/etc/upfd/config.yaml:ro
-#      - ./config/mec-upf1-routing.sh:/usr/local/bin/routing.sh:ro
-#    command: -c /etc/upfd/config.yaml
-#    cap_add:
-#      - NET_ADMIN
-#    sysctls:
-#      - net.ipv4.ip_forward=1
-#      - net.ipv6.conf.all.disable_ipv6=0
-#    environment:
-#      - ROUTING=routing.sh
-#      - CONFIG_FILE=/etc/upfd/config.yaml
-#    networks:
-#      mec-net:
-#        ipv4_address: 10.0.201.3
-#        ipv6_address: fd00:d0cc:e700:1111:4::3
-#      test-mec-net:
-#        ipv4_address: 10.0.223.2
-#      tn-cp-gw-net:
-#        ipv4_address: 10.0.213.3
-#        ipv6_address: fd00:d0cc:e700:1111:2::3
-#      tn-sliceA-gw-net:
-#        ipv4_address: 10.0.215.2
-  mec-upf1:
-    container_name: mec-upf1
-    hostname: mec-upf1
-    restart: always
-    depends_on:
-      - upf1
-    build:
-      context: ./nextmn-upf
-      target: nextmn-upf
-    image: nextmn-upf
-    working_dir: /volume
-    volumes:
-      - ../nextmn-upf/config/mec-upf-testmecupf.yaml:/etc/upfd/config.yaml:ro
-      - ./config/mec-upf1-routing.sh:/usr/local/bin/routing.sh:ro
-      - ../nextmn-upf:/volume:ro
-    command: -c /etc/upfd/config.yaml
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - "/dev/net/tun"
-    sysctls:
-      - net.ipv4.ip_forward=1
-      - net.ipv6.conf.all.disable_ipv6=0
-    environment:
-      - FORCE_REINSTALL=1
-      - ROUTING=routing.sh
-      - CONFIG_FILE=/etc/upfd/config.yaml
-    networks:
-      mec-net:
-        ipv4_address: 10.0.201.3
-        ipv6_address: fd00:d0cc:e700:1111:4::3
-      test-mec-net:
-        ipv4_address: 10.0.223.2
-      tn-cp-gw-net:
-        ipv4_address: 10.0.213.3
-        ipv6_address: fd00:d0cc:e700:1111:2::3
-      tn-sliceA-gw-net:
-        ipv4_address: 10.0.215.2
-
-  mec-dns:
-    container_name: mec-dns
-    hostname: mec-dns
-    image: bind9
-    build:
-      context: ./bind9
-    command: -g -p 53
-    volumes:
-      - ./bind9/named.conf.options:/etc/bind/named.conf.options:ro
-      - ./config/routing-mec-dns.sh:/usr/local/bin/routing.sh:ro
-    environment:
-      - ROUTING=routing.sh
-    cap_add:
-      - NET_ADMIN
-    networks:
-      test-mec-net:
-        ipv4_address: 10.0.223.3
-      tn-mec-gw-net:
-        ipv4_address: 10.0.217.2
-
-
-  free5gc-populate:
-    container_name: free5gc-populate
-    hostname: free5gc-populate
-    depends_on:
-      - mongodb-f5gc
-    build:
-      context: ./free5gc-populate
-      args:
-        F5GCPOPULATE_RELEASE: 3f4c8b1
-    volumes:
-      - ./config/populate-config.yaml:/etc/free5gc-populate/config.yaml:ro
-    command: --config /etc/free5gc-populate/config.yaml
-    image: free5gc-populate
-    networks:
-      db-net:
-
-
-
-  amf1:
-    container_name: amf1
-    hostname: amf1
-    restart: always
-    depends_on:
-      - nrf
-    build:
-      context: ./free5gc
-      target: free5gc-amf
-      args:
-        F5GC_RELEASE: v3.2.0
-    image: free5gc-amf
-    volumes:
-      - ./config/templates/config-amf.yaml:/etc/amf/config-template.yaml:ro
-      - ./config/templates/scripts/config-amf.sh:/usr/local/bin/config.sh:ro
-      - ./config/routing-amf.sh:/usr/local/bin/routing.sh:ro
-    command: --config /etc/amf/config.yaml
-    cap_add:
-      - NET_ADMIN
-    sysctls:
-      - net.ipv6.conf.all.disable_ipv6=0
-    environment:
-      - ROUTING=routing.sh
-      - TEMPLATE=/etc/amf/config-template.yaml
-      - CONFIG_FILE=/etc/amf/config.yaml
-      - CONFIG_SCRIPT=config.sh
-      - NGAP_IP=10.0.214.3
-        #- NGAP_IP=fd00:d0cc:e700:1111:3::3
-      - SBI_REGISTER_IP=amf1.sbi-net 
-      - SBI_BINDING_IP=10.0.211.4
-      - MCC=001
-      - MNC=01
-      - AMF_ID=000001
-      - AMF_NAME=AMF1
-      - NRF_URI=http://nrf.sbi-net:8000
-      - DNN_LIST=sliceA
-      - SST_LIST=1
-      - SD_LIST=010203
-      - TAC=1
-      - LOCALITY=loc1
-    networks:
-      sbi-net:
-        ipv4_address: 10.0.211.4
-      tn-cp-st-net:
-        ipv4_address: 10.0.214.3
-        ipv6_address: fd00:d0cc:e700:1111:3::3
-
-  smf1:
-    container_name: smf1
-    hostname: smf1
-    restart: always
-    depends_on:
-      - mec-upf1
-      - upf1
-      - nrf
-    build:
-      context: ./free5gc
-      target: free5gc-smf
-      args:
-        F5GC_RELEASE: v3.2.0
-    image: free5gc-smf
-    volumes:
-      - ./config/smf-config.yaml:/etc/smf/smf-config.yaml:ro
-      - ./config/ue-routing.yaml:/etc/smf/ue-routing.yaml:ro
-      - ./config/routing-smf.sh:/usr/local/bin/routing.sh:ro
-    environment:
-      - ROUTING=routing.sh
-    cap_add:
-      - NET_ADMIN
-    command: --config /etc/smf/smf-config.yaml --uerouting /etc/smf/ue-routing.yaml
-    networks:
-      n4-net:
-        ipv4_address: 10.0.210.2
-      sbi-net:
-        ipv4_address: 10.0.211.3
-
-  nrf:
-    container_name: nrf
-    hostname: nrf
-    restart: always
-    depends_on:
-      - mongodb-f5gc
-    build:
-      context: ./free5gc
-      target: free5gc-nrf
-      args:
-        F5GC_RELEASE: v3.2.0
-    image: free5gc-nrf
-    volumes:
-      - ./config/nrf-config.yaml:/etc/nrf/config.yaml:ro
-    command: --config /etc/nrf/config.yaml
-    networks:
-      db-net:
-      sbi-net:
-        ipv4_address: 10.0.211.2
-
-  mongodb-f5gc:
-    image: mongo
-    container_name: mongodb-f5gc
-    hostname: mongodb-f5gc
-    command: mongod --port 27017 --bind_ip_all
-    volumes:
-      - ./f5gc-dbdata:/data/db
-    restart: always
-    networks:
-      db-net:
-
-  ausf:
-    container_name: ausf
-    hostname: ausf
-    restart: always
-    depends_on:
-      - nrf
-    build:
-      context: ./free5gc
-      target: free5gc-ausf
-      args:
-        F5GC_RELEASE: v3.2.0
-    image: free5gc-ausf
-    volumes:
-      - ./config/ausf-config.yaml:/etc/ausf/config.yaml:ro
-    command: --config /etc/ausf/config.yaml
-    networks:
-      sbi-net:
-        ipv4_address: 10.0.211.5
-
-  nssf:
-    container_name: nssf 
-    hostname: nssf
-    restart: always
-    depends_on:
-      - nrf
-    build:
-      context: ./free5gc
-      target: free5gc-nssf
-      args:
-        F5GC_RELEASE: v3.2.0
-    image: free5gc-nssf
-    volumes:
-      - ./config/nssf-config.yaml:/etc/nssf/config.yaml:ro
-    command: --config /etc/nssf/config.yaml
-    networks:
-      sbi-net:
-        ipv4_address: 10.0.211.6
-
-  udm:
-    container_name: udm 
-    hostname: udm
-    restart: always
-    depends_on:
-      - nrf
-    build:
-      context: ./free5gc
-      target: free5gc-udm
-      args:
-        F5GC_RELEASE: v3.2.0
-    image: free5gc-udm
-    volumes:
-      - ./config/udm-config.yaml:/etc/udm/config.yaml:ro
-    command: --config /etc/udm/config.yaml
-    networks:
-      sbi-net:
-        ipv4_address: 10.0.211.7
-
-  udr:
-    container_name: udr 
-    hostname: udr
-    restart: always
-    depends_on:
-      - nrf
-    build:
-      context: ./free5gc
-      target: free5gc-udr
-      args:
-        F5GC_RELEASE: v3.2.0
-    image: free5gc-udr
-    volumes:
-      - ./config/udr-config.yaml:/etc/udr/config.yaml:ro
-    command: --config /etc/udr/config.yaml
-    networks:
-      db-net:
-      sbi-net:
-        ipv4_address: 10.0.211.8
-
-  pcf:
-    container_name: pcf
-    hostname: pcf
-    restart: always
-    depends_on:
-      - nrf
-    build:
-      context: ./free5gc
-      target: free5gc-pcf
-      args:
-        F5GC_RELEASE: v3.2.0
-    image: free5gc-pcf
-    volumes:
-      - ./config/pcf-config.yaml:/etc/pcf/config.yaml:ro
-    command: --config /etc/pcf/config.yaml
-    networks:
-      db-net:
-      sbi-net:
-        ipv4_address: 10.0.211.9
-
-  cp-st-router:
-    container_name: cp-st-router
-    hostname: cp-st-router
-    restart: always
-    build:
-      context: ./router
-    image: router
-    volumes:
-      - ./config/routing-cp-st-router.sh:/usr/local/bin/routing.sh:ro
-    environment:
-      - ROUTING=routing.sh
-    cap_add:
-      - NET_ADMIN
-    sysctls:
-      - net.ipv4.ip_forward=1
-    networks:
-      tn-cp-st-net:
-        ipv4_address: 10.0.214.2
-        ipv6_address: fd00:d0cc:e700:1111:3::2
-      n4-net:
-        ipv4_address: 10.0.210.4
-
+  <<: *group-ue
+  <<: *group-gnb
+  <<: *group-upf-i
+  <<: *group-upf-a
+  <<: *group-core-network-main-nf
+  <<: *group-core-network-aux-nf
+  <<: *group-mec-dn
+  <<: *group-internet-dn
+  <<: *group-trunks
 
 networks:
   ran-net:
