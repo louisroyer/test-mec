@@ -1,4 +1,3 @@
-version: "3.9"
 x-define:
   x-debug:
     x-debug-common: &debug-common
@@ -323,7 +322,7 @@ x-group:
       working_dir: /volume
       volumes:
         - ../nextmn-upf/config/upf2-testmecupf.yaml:/etc/upfd/config.yaml:ro
-        - ./config/upf1-routing.sh:/usr/local/bin/routing.sh:ro
+        - ./config/upf2-routing.sh:/usr/local/bin/routing.sh:ro
         - ../nextmn-upf:/volume:ro
       command: -c /etc/upfd/config.yaml
       cap_add:
@@ -527,7 +526,6 @@ x-group:
         tn-cp-st-net:
           ipv4_address: 10.0.214.3
           ipv6_address: fd00:d0cc:e700:1111:3::3
-
     smf1:
       container_name: smf1
       hostname: smf1
