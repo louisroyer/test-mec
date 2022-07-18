@@ -1,4 +1,5 @@
 options {
+	response-policy { zone "mec.test"; };
 	allow-query { any; };
 	directory "/var/cache/bind";
 	forwarders {

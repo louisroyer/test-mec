@@ -19,6 +19,8 @@ ueRoutingInfo: # the list of UE routing information
         path: [upf-mec-area1]
       - dest: 10.0.222.0/24
         path: [upf-mec-area1]
+      - dest: 10.0.223.0/24
+        path: [upf-mec-area1]
 
   NO-MEH:
     members:

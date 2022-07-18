@@ -1,0 +1,4 @@
+zone "mec.test" {
+	type master;
+	file "/etc/bind/zones/test.db";
+};

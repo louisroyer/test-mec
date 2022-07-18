@@ -1,0 +1,15 @@
+$TTL    86400
+@   IN  SOA ns1.mec.test. root.mec.test. (
+            2014100801  ; Serial
+            43200       ; Refresh
+            3600        ; Retry
+            1209600     ; Expire
+            180 )       ; Minimum TTL
+
+
+    IN  NS  ns1.mec.test.
+    IN  A   10.0.223.3
+ns1.test   CNAME ns1.mec.test.
+site1.test CNAME site1.mec.test.
+site1.mec.test. A 10.0.223.4
+ns1.mec.test. A 10.0.223.3

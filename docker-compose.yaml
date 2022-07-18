@@ -661,7 +661,9 @@ x-group:
         context: ./bind9
       command: -g -p 53
       volumes:
+        - ./bind9/mec-named.conf.local:/etc/bind/named.conf.local:ro
         - ./bind9/named.conf.options:/etc/bind/named.conf.options:ro
+        - ./bind9/test-mec.db:/etc/bind/zones/test.db:ro
         - ./config/routing-mec-dns.sh:/usr/local/bin/routing.sh:ro
       environment:
         - ROUTING=routing.sh
