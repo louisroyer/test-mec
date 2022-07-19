@@ -12,3 +12,5 @@ ip route add "${DNS_MNO}" via "${DNS_MEC}"
 # route smf
 ip route add 10.0.210.0/24 via "${TRUNK_CP}"
 
+# DNAT site2.test -> MEC
+iptables -t nat -A PREROUTING -d 10.0.224.6 -j DNAT --to-destination 10.0.223.5

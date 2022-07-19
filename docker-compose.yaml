@@ -1,4 +1,21 @@
 x-define:
+  x-entrypoint-mec: &entrypoint-mec # TODO An dedicated image to do this lightfully
+    image: louisroyer/network-debug 
+    restart: "no" # oneshot
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ./entrypoint-mec.sh:/usr/local/bin/entrypoint.sh:ro
+    entrypoint: entrypoint.sh
+  x-entrypoint-test-dn: &entrypoint-test-dn # TODO An dedicated image to do this lightfully
+    image: louisroyer/network-debug 
+    restart: "no" # oneshot
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ./entrypoint-test-dn.sh:/usr/local/bin/entrypoint.sh:ro
+    entrypoint: entrypoint.sh
+
   x-debug:
     x-debug-common: &debug-common
       image: louisroyer/network-debug
@@ -674,6 +691,48 @@ x-group:
           ipv4_address: 10.0.223.3
         tn-mec-gw-net:
           ipv4_address: 10.0.217.2
+    mec-site1:
+      container_name: mec-site1
+      hostname: mec-site1
+      image: nginx
+      volumes:
+        - ./nginx/templates:/etc/nginx/templates:ro
+      environment:
+        NGINX_PORT: 80
+        NGINX_SERVER_NAMES: site1.mec.test site1.test
+        NGINX_CONTENT: "Hello from MEC (site1.test)\n"
+      networks:
+        test-mec-net:
+          ipv4_address: 10.0.223.4
+    mec-site1-debug:
+      <<: *debug-common
+      container_name: mec-site1-debug
+      network_mode: service:mec-site1
+    mec-site1-entrypoint:
+      <<: *entrypoint-mec
+      container_name: mec-site1-entrypoint
+      network_mode: service:mec-site1
+    mec-site2:
+      container_name: mec-site2
+      hostname: mec-site2
+      image: nginx
+      volumes:
+        - ./nginx/templates:/etc/nginx/templates:ro
+      environment:
+        NGINX_PORT: 80
+        NGINX_SERVER_NAMES: site2.test
+        NGINX_CONTENT: "Hello from MEC (site2.test)\n"
+      networks:
+        test-mec-net:
+          ipv4_address: 10.0.223.5
+    mec-site2-debug:
+      <<: *debug-common
+      container_name: mec-site2-debug
+      network_mode: service:mec-site2
+    mec-site2-entrypoint:
+      <<: *entrypoint-mec
+      container_name: mec-site2-entrypoint
+      network_mode: service:mec-site2
   x-group-internet-dn: &group-internet-dn # dns
     dns:
       container_name: dns
@@ -697,6 +756,48 @@ x-group:
           ipv4_address: 10.0.224.3
         tn-mec-st-net:
           ipv4_address: 10.0.218.2
+    site1:
+      container_name: site1
+      hostname: site1
+      image: nginx
+      volumes:
+        - ./nginx/templates:/etc/nginx/templates:ro
+      environment:
+        NGINX_PORT: 80
+        NGINX_SERVER_NAMES: site1.test
+        NGINX_CONTENT: "Hello from internet DN (site1.test)\n"
+      networks:
+        test-net:
+          ipv4_address: 10.0.224.5
+    site1-debug:
+      <<: *debug-common
+      container_name: site1-debug
+      network_mode: service:site1
+    site1-entrypoint:
+      <<: *entrypoint-test-dn
+      container_name: site1-entrypoint
+      network_mode: service:site1
+    site2:
+      container_name: site2
+      hostname: site2
+      image: nginx
+      volumes:
+        - ./nginx/templates:/etc/nginx/templates:ro
+      environment:
+        NGINX_PORT: 80
+        NGINX_SERVER_NAMES: site2.test
+        NGINX_CONTENT: "Hello from internet DN (site2.test)\n"
+      networks:
+        test-net:
+          ipv4_address: 10.0.224.6
+    site2-debug:
+      <<: *debug-common
+      container_name: site2-debug
+      network_mode: service:site2
+    site2-entrypoint:
+      <<: *entrypoint-test-dn
+      container_name: site2-entrypoint
+      network_mode: service:site2
 
 services:
   <<: *group-ue

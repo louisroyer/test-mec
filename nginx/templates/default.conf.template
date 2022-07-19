@@ -1,0 +1,9 @@
+server {
+	listen ${NGINX_PORT};
+	listen [::]:${NGINX_PORT};
+	server_name ${NGINX_SERVER_NAMES};
+	location / {
+		return 200 '${NGINX_CONTENT}';
+		add_header Content-Type text/plain;
+	}
+}

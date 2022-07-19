@@ -4,11 +4,11 @@ EXEC = docker exec -it
 LOG = docker logs
 PING = ping -c 10 -i 0.2
 DIGSHORT = dig +short A
-CURL = curl -L
+CURL = curl -L -v
 
 TESTCASES := ue2ue explicitaccess dnsredirect trafficsteering
 
-.PHONY: default u d t l lf e ping uping ip dig test $(addprefix test/, $(TESTCASES)) $(addprefix test-label/, $(TESTCASES)) 
+.PHONY: default u d t l lf e ping uping ip dig waitkey test $(addprefix test/, $(TESTCASES)) $(addprefix test-label/, $(TESTCASES)) 
 
 default: u
 u:
@@ -43,9 +43,9 @@ dig/%:
 
 curl/%:
 	@echo "====== CURL $(*D) ->  $(@F) ======"
-	$(EXEC) $(*D)-debug bash -c "$(CURL) http://$(@F)"
+	$(EXEC) $(*D)-debug bash -c "$(CURL) $(@F)"
 
-waitkey:
+waitkey/%:
 	@echo ""
 	@echo "#=========================#"
 	@echo "# Press enter to continue #"
@@ -61,7 +61,7 @@ test-label/ue2ue:
 	@echo "#===============================================================#"
 	@echo ""
 	@read line
-test/ue2ue: test-label/ue2ue uping/ue3/ue4 waitkey uping/ue1/ue2
+test/ue2ue: test-label/ue2ue uping/ue3/ue4 waitkey/ue2ue uping/ue1/ue2
 
 
 test-label/explicitaccess:
@@ -80,7 +80,7 @@ test-label/dnsredirect:
 	@echo "#================================#"
 	@echo ""
 	@read line
-test/dnsredirect: test-label/dnsredirect dig/ue3/site1.test curl/ue3/site1.test waitkey dig/ue1/site1.test curl/ue1/site1.test
+test/dnsredirect: test-label/dnsredirect dig/ue3/site1.test curl/ue3/site1.test waitkey/dnsredirect dig/ue1/site1.test curl/ue1/site1.test
 
 test-label/trafficsteering:
 	@echo "#=================================#"
@@ -89,4 +89,4 @@ test-label/trafficsteering:
 	@echo "#=================================#"
 	@echo ""
 	@read line
-test/trafficsteering: test-label/trafficsteering dig/ue3/site2.test curl/ue3/site2.test waitkey dig/ue1/site2.test curl/ue1/site2.test
+test/trafficsteering: test-label/trafficsteering dig/ue3/site2.test curl/ue3/site2.test waitkey/trafficsteering dig/ue1/site2.test curl/ue1/site2.test
