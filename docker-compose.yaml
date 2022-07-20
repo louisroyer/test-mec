@@ -23,6 +23,13 @@ x-define:
         - NET_ADMIN
       profiles:
         - debug
+  x-debug-lvl2:
+    x-debuglvl2-common: &debug-lvl2-common
+      image: louisroyer/network-debug
+      cap_add:
+        - NET_ADMIN
+      profiles:
+        - debug-lvl2
   x-ue:
     x-ue-environment-common: &ue-environment-common
       MCC: "001"
@@ -705,7 +712,7 @@ x-group:
         test-mec-net:
           ipv4_address: 10.0.223.4
     mec-site1-debug:
-      <<: *debug-common
+      <<: *debug-lvl2-common
       container_name: mec-site1-debug
       network_mode: service:mec-site1
     mec-site1-entrypoint:
@@ -726,7 +733,7 @@ x-group:
         test-mec-net:
           ipv4_address: 10.0.223.5
     mec-site2-debug:
-      <<: *debug-common
+      <<: *debug-lvl2-common
       container_name: mec-site2-debug
       network_mode: service:mec-site2
     mec-site2-entrypoint:
@@ -770,7 +777,7 @@ x-group:
         test-net:
           ipv4_address: 10.0.224.5
     site1-debug:
-      <<: *debug-common
+      <<: *debug-lvl2-common
       container_name: site1-debug
       network_mode: service:site1
     site1-entrypoint:
@@ -791,7 +798,7 @@ x-group:
         test-net:
           ipv4_address: 10.0.224.6
     site2-debug:
-      <<: *debug-common
+      <<: *debug-lvl2-common
       container_name: site2-debug
       network_mode: service:site2
     site2-entrypoint:
