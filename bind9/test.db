@@ -22,3 +22,4 @@ ns1.test.     IN  A   10.0.224.3
 ; Hostname records
 site1   IN  A   10.0.224.5
 site2   IN  A   10.0.224.6
+site3   IN  A   10.0.224.7

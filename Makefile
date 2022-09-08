@@ -11,7 +11,7 @@ COLOR_GREEN = \033[0;32m
 COLOR_YELLOW = \033[0;33m
 COLOR_BLUE = \033[0;34m
 COLOR_END = \033[0m
-TESTCASES := ue2ue explicitaccess dnsredirect trafficsteering
+TESTCASES := ue2ue explicitaccess appredirect dnsredirect trafficsteering
 
 .PHONY: default u d t l lf e ping uping ip dig waitkey test $(addprefix test/, $(TESTCASES)) $(addprefix test-label/, $(TESTCASES)) 
 
@@ -80,9 +80,18 @@ test-label/explicitaccess:
 	@read line
 test/explicitaccess: test-label/explicitaccess dig/ue1/site1.mec.test curl/ue1/site1.mec.test waitkey/explicitaccess/1
 
+test-label/appredirect:
+	@echo "$(COLOR_GREEN)#========================================#"
+	@echo "# MEC Access via Application Redirection #"
+	@echo "#     (press enter to continue)          #"
+	@echo "#========================================#"
+	@echo "$(COLOR_END)"
+	@read line
+test/appredirect: test-label/appredirect dig/ue3/site3.test curl/ue3/site3.test waitkey/appredirect/1 dig/ue1/site3.test curl/ue1/site3.test waitkey/appredirect/2
+
 test-label/dnsredirect:
 	@echo "$(COLOR_GREEN)#================================#"
-	@echo "# MEC Access via DNS Redirection #"
+	@echo "# MEC Access via DNS Resolution  #"
 	@echo "#    (press enter to continue)   #"
 	@echo "#================================#"
 	@echo "$(COLOR_END)"

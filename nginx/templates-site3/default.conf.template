@@ -1,0 +1,17 @@
+geo $mec {
+	10.0.222.0/24 site3.mec.test; 
+}
+server {
+	listen ${NGINX_PORT};
+	listen [::]:${NGINX_PORT};
+	server_name ${NGINX_SERVER_NAMES};
+
+	location / {
+		if ($mec) {
+			return 307 $scheme://$mec$request_uri;
+		}
+		return 200 '${NGINX_CONTENT}';
+		add_header Content-Type text/plain;
+	}
+
+}

@@ -15,11 +15,13 @@ ueRoutingInfo: # the list of UE routing information
       - A: upf-mec-area1
         B: upf-sliceA
     specificPath:
-      - dest: 10.0.224.3/24
+      - dest: 10.0.224.3/32 # ns1.test
         path: [upf-mec-area1]
-      - dest: 10.0.222.0/24
+      - dest: 10.0.224.6/32 # site2.test
         path: [upf-mec-area1]
-      - dest: 10.0.223.0/24
+      - dest: 10.0.222.0/24 # UE-to-UE
+        path: [upf-mec-area1]
+      - dest: 10.0.223.0/24 # mec.test
         path: [upf-mec-area1]
 
   NO-MEH:

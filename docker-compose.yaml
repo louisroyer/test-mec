@@ -1,5 +1,5 @@
 x-define:
-  x-entrypoint-mec: &entrypoint-mec # TODO An dedicated image to do this lightfully
+  x-entrypoint-mec: &entrypoint-mec # TODO A dedicated image to do this lightfully
     image: louisroyer/network-debug 
     restart: "no" # oneshot
     cap_add:
@@ -7,7 +7,7 @@ x-define:
     volumes:
       - ./entrypoint-mec.sh:/usr/local/bin/entrypoint.sh:ro
     entrypoint: entrypoint.sh
-  x-entrypoint-test-dn: &entrypoint-test-dn # TODO An dedicated image to do this lightfully
+  x-entrypoint-test-dn: &entrypoint-test-dn # TODO A dedicated image to do this lightfully
     image: louisroyer/network-debug 
     restart: "no" # oneshot
     cap_add:
@@ -740,6 +740,27 @@ x-group:
       <<: *entrypoint-mec
       container_name: mec-site2-entrypoint
       network_mode: service:mec-site2
+    mec-site3:
+      container_name: mec-site3
+      hostname: mec-site3
+      image: nginx
+      volumes:
+        - ./nginx/templates:/etc/nginx/templates:ro
+      environment:
+        NGINX_PORT: 80
+        NGINX_SERVER_NAMES: site3.mec.test
+        NGINX_CONTENT: "Hello from MEC (site3.test)\n"
+      networks:
+        test-mec-net:
+          ipv4_address: 10.0.223.6
+    mec-site3-debug:
+      <<: *debug-lvl2-common
+      container_name: mec-site3-debug
+      network_mode: service:mec-site3
+    mec-site3-entrypoint:
+      <<: *entrypoint-mec
+      container_name: mec-site3-entrypoint
+      network_mode: service:mec-site3
   x-group-internet-dn: &group-internet-dn # dns
     dns:
       container_name: dns
@@ -805,6 +826,27 @@ x-group:
       <<: *entrypoint-test-dn
       container_name: site2-entrypoint
       network_mode: service:site2
+    site3:
+      container_name: site3
+      hostname: site3
+      image: nginx
+      volumes:
+        - ./nginx/templates-site3:/etc/nginx/templates:ro
+      environment:
+        NGINX_PORT: 80
+        NGINX_SERVER_NAMES: site3.test
+        NGINX_CONTENT: "Hello from internet DN (site3.test)\n"
+      networks:
+        test-net:
+          ipv4_address: 10.0.224.7
+    site3-debug:
+      <<: *debug-lvl2-common
+      container_name: site3-debug
+      network_mode: service:site3
+    site3-entrypoint:
+      <<: *entrypoint-test-dn
+      container_name: site3-entrypoint
+      network_mode: service:site3
 
 services:
   <<: *group-ue

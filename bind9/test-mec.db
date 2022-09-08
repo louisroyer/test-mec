@@ -12,4 +12,5 @@ $TTL    86400
 ns1.test   CNAME ns1.mec.test.
 site1.test CNAME site1.mec.test.
 site1.mec.test. A 10.0.223.4
+site3.mec.test. A 10.0.223.6
 ns1.mec.test. A 10.0.223.3

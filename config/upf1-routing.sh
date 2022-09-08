@@ -10,4 +10,4 @@ ip route add 10.0.215.0/24 via $TRUNK_UP proto static
 
 # route to other DN
 # en dur pour l’instant, à changer
-ip route add  10.0.111.0/24 via 10.0.224.4
+ip route add  10.0.111.0/24 via 10.0.224.4 proto static
