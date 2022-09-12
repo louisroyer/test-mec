@@ -30,6 +30,12 @@ x-define:
         - NET_ADMIN
       profiles:
         - debug-lvl2
+  x-socks: &socks
+    image: microsocks
+    build:
+      context: ./microsocks
+    profiles:
+        - socks
   x-ue:
     x-ue-environment-common: &ue-environment-common
       MCC: "001"
@@ -94,6 +100,10 @@ x-group:
       <<: *debug-common
       container_name: ue1-debug
       network_mode: service:ue1
+    ue1-socks:
+      <<: *socks
+      container_name: ue1-socks
+      network_mode: service:ue1
     ue2:
       <<: *ue-common
       container_name: ue2
@@ -104,6 +114,10 @@ x-group:
     ue2-debug:
       <<: *debug-common
       container_name: ue2-debug
+      network_mode: service:ue2
+    ue2-socks:
+      <<: *socks
+      container_name: ue2-socks
       network_mode: service:ue2
     ue3:
       <<: *ue-common
@@ -116,6 +130,10 @@ x-group:
       <<: *debug-common
       container_name: ue3-debug
       network_mode: service:ue3
+    ue3-socks:
+      <<: *socks
+      container_name: ue3-socks
+      network_mode: service:ue3
     ue4:
       <<: *ue-common
       container_name: ue4
@@ -126,6 +144,10 @@ x-group:
     ue4-debug:
       <<: *debug-common
       container_name: ue4-debug
+      network_mode: service:ue4
+    ue4-socks:
+      <<: *socks
+      container_name: ue4-socks
       network_mode: service:ue4
   x-group-gnb: &group-gnb # gnb1, gnb2
     gnb1:

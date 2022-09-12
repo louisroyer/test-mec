@@ -1,4 +1,5 @@
 DEBUG = --profile debug
+SOCKS= --profile socks
 DC = docker compose
 EXEC = docker exec -it
 LOG = docker logs
@@ -18,8 +19,10 @@ TESTCASES := ue2ue explicitaccess appredirect dnsredirect trafficsteering
 default: u
 u:
 	$(DC) $(DEBUG) up -d
+	$(DC) $(SOCKS) up -d
 d:
 	$(DC) $(DEBUG) down
+	$(DC) $(SOCKS) down 
 r: d u
 
 e/%:
@@ -34,11 +37,15 @@ lf/%:
 ip/%:
 	@$(EXEC) $(@F)-debug bash -c "ip --brief address show uesimtun0|awk '{print \"$(@F):\", \$$3; exit}'"
 
+# Ping an ue from another ue
+# Example uping/ue1/ue2 -> Ping from ue1 to ue2
 uping/%:
 	@echo "$(COLOR_BLUE)======  PING $(*D) -> $(@F) ======$(COLOR_END)"
 	@TARGET=$(shell $(EXEC) $(@F)-debug bash -c "ip --brief address show uesimtun0|awk '{print \$$3; exit}'|cut -d"/" -f 1");\
 	echo "$(COLOR_RED)$(EXEC) $(*D)-debug bash -c \"$(PING) $$TARGET\" $(COLOR_END)";\
 	$(EXEC) $(*D)-debug bash -c "$(PING) $$TARGET"
+
+# Ping from a container
 ping/%:
 	$(EXEC) $(*D)-debug bash -c "$(PING) $(@F)"
 
@@ -58,6 +65,13 @@ waitkey/%:
 	@echo "# Press enter to continue #"
 	@echo "#=========================#$(COLOR_END)"
 	@read line
+
+# enable socks connection (firefox cannot send user/password), and open firefox profile
+firefox/%:
+	@TARGET=$(shell $(EXEC) $(@F)-debug bash -c "ip --brief address show ran-0|awk '{print \$$3; exit}'|cut -d"/" -f 1");\
+	curl --connect-timeout 0.001 --socks5 user:password@$$TARGET:1080 test 2>/dev/null ; true; \
+	echo "Starting firefox with profile $$TARGET, please create and configure it if it doesn't exist yet." ; \
+	firefox -P $$TARGET 2>/dev/null &
 
 test: $(addprefix test/, $(TESTCASES))
 
