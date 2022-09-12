@@ -14,26 +14,36 @@ COLOR_BLUE = \033[0;34m
 COLOR_END = \033[0m
 TESTCASES := ue2ue explicitaccess appredirect dnsredirect trafficsteering
 
-.PHONY: default u d t l lf e ping uping ip dig waitkey test $(addprefix test/, $(TESTCASES)) $(addprefix test-label/, $(TESTCASES)) 
+.PHONY: default u d t l lf e ping uping ip dig waitkey firefox test $(addprefix test/, $(TESTCASES)) $(addprefix test-label/, $(TESTCASES)) 
 
 default: u
+# Start containers
 u:
 	$(DC) $(DEBUG) up -d
 	$(DC) $(SOCKS) up -d
+# Shutdown containers
 d:
 	$(DC) $(DEBUG) down
 	$(DC) $(SOCKS) down 
+
+# Restart containers
 r: d u
 
+# Enter container
 e/%:
 	$(EXEC) $(@F) bash
 
+# Enter debug-container
 t/%:
 	$(EXEC) $(@F)-debug bash
+# Get container's logs
 l/%:
 	$(LOG) $(@F)
+# Get container's logs (continuous)
 lf/%:
 	$(LOG) $(@F) -f
+
+# Get IP Address of an ue
 ip/%:
 	@$(EXEC) $(@F)-debug bash -c "ip --brief address show uesimtun0|awk '{print \"$(@F):\", \$$3; exit}'"
 
@@ -49,16 +59,19 @@ uping/%:
 ping/%:
 	$(EXEC) $(*D)-debug bash -c "$(PING) $(@F)"
 
+# Dig from a container
 dig/%:
 	@echo "$(COLOR_BLUE)====== DIG $(*D) ->  $(@F) ======$(COLOR_END)"
 	@echo "$(COLOR_RED)$(EXEC) $(*D)-debug bash -c \"$(DIGSHORT) $(@F)\"$(COLOR_END)"
 	@$(EXEC) $(*D)-debug bash -c "$(DIGSHORT) $(@F)"
 
+# Curl from a container
 curl/%:
 	@echo "$(COLOR_BLUE)====== CURL $(*D) ->  $(@F) ======$(COLOR_END)"
 	@echo "$(COLOR_RED)$(EXEC) $(*D)-debug bash -c \"$(CURL) $(@F)\"$(COLOR_END)"
 	@$(EXEC) $(*D)-debug bash -c "$(CURL) $(@F)"
 
+# Wait for a key press
 waitkey/%:
 	@echo "$(COLOR_YELLOW)"
 	@echo "#=========================#"
@@ -73,6 +86,7 @@ firefox/%:
 	echo "Starting firefox with profile $$TARGET, please create and configure it if it doesn't exist yet." ; \
 	firefox -P $$TARGET 2>/dev/null &
 
+# Run tests
 test: $(addprefix test/, $(TESTCASES))
 
 test-label/ue2ue:
