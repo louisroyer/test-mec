@@ -6,4 +6,11 @@ server {
 		return 200 '${NGINX_CONTENT}';
 		add_header Content-Type text/plain;
 	}
+	location /videos/ {
+		autoindex on;
+		root /usr/share/nginx/;
+		mp4;
+		mp4_buffer_size 1m;
+		mp4_max_buffer_size 5m;
+	}
 }

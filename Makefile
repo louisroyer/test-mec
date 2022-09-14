@@ -82,7 +82,7 @@ waitkey/%:
 # enable socks connection (firefox cannot send user/password), and open firefox profile
 firefox/%:
 	@TARGET=$(shell $(EXEC) $(@F)-debug bash -c "ip --brief address show ran-0|awk '{print \$$3; exit}'|cut -d"/" -f 1");\
-	curl --connect-timeout 0.001 --socks5 user:password@$$TARGET:1080 test 2>/dev/null ; true; \
+	curl --connect-timeout 1 --socks5 user:password@$$TARGET:1080 test 2>/dev/null ; true; \
 	echo "Starting firefox with profile $$TARGET, please create and configure it if it doesn't exist yet." ; \
 	firefox -P $$TARGET 2>/dev/null &
 

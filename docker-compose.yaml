@@ -726,6 +726,7 @@ x-group:
       image: nginx
       volumes:
         - ./nginx/templates:/etc/nginx/templates:ro
+        - /home/louis/Vidéos:/usr/share/nginx/videos:ro
       environment:
         NGINX_PORT: 80
         NGINX_SERVER_NAMES: site1.mec.test site1.test
@@ -747,6 +748,7 @@ x-group:
       image: nginx
       volumes:
         - ./nginx/templates:/etc/nginx/templates:ro
+        - /home/louis/Vidéos:/usr/share/nginx/videos:ro
       environment:
         NGINX_PORT: 80
         NGINX_SERVER_NAMES: site2.test
@@ -768,6 +770,7 @@ x-group:
       image: nginx
       volumes:
         - ./nginx/templates:/etc/nginx/templates:ro
+        - /home/louis/Vidéos:/usr/share/nginx/videos:ro
       environment:
         NGINX_PORT: 80
         NGINX_SERVER_NAMES: site3.mec.test
@@ -812,6 +815,7 @@ x-group:
       image: nginx
       volumes:
         - ./nginx/templates:/etc/nginx/templates:ro
+        - /home/louis/Vidéos:/usr/share/nginx/videos:ro
       environment:
         NGINX_PORT: 80
         NGINX_SERVER_NAMES: site1.test
@@ -833,6 +837,7 @@ x-group:
       image: nginx
       volumes:
         - ./nginx/templates:/etc/nginx/templates:ro
+        - /home/louis/Vidéos:/usr/share/nginx/videos:ro
       environment:
         NGINX_PORT: 80
         NGINX_SERVER_NAMES: site2.test
@@ -854,6 +859,7 @@ x-group:
       image: nginx
       volumes:
         - ./nginx/templates-site3:/etc/nginx/templates:ro
+        - /home/louis/Vidéos:/usr/share/nginx/videos:ro
       environment:
         NGINX_PORT: 80
         NGINX_SERVER_NAMES: site3.test
