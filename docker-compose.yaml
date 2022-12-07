@@ -730,7 +730,7 @@ x-group:
       environment:
         NGINX_PORT: 80
         NGINX_SERVER_NAMES: site1.mec.test site1.test
-        NGINX_CONTENT: "Hello from MEC (site1.test)\n"
+        NGINX_CONTENT: "Service ID: site1.test\nInstance IDs: site1.mec.test, 10.0.223.4\n"
       networks:
         test-mec-net:
           ipv4_address: 10.0.223.4
@@ -752,7 +752,7 @@ x-group:
       environment:
         NGINX_PORT: 80
         NGINX_SERVER_NAMES: site2.test
-        NGINX_CONTENT: "Hello from MEC (site2.test)\n"
+        NGINX_CONTENT: "Service ID: site2.test\nInstance IDs: site2.mec.test, 10.0.223.5\n"
       networks:
         test-mec-net:
           ipv4_address: 10.0.223.5
@@ -774,7 +774,7 @@ x-group:
       environment:
         NGINX_PORT: 80
         NGINX_SERVER_NAMES: site3.mec.test
-        NGINX_CONTENT: "Hello from MEC (site3.test)\n"
+        NGINX_CONTENT: "Service ID: site3.test\nInstance IDs: site3.mec.test, 10.0.223.6\n"
       networks:
         test-mec-net:
           ipv4_address: 10.0.223.6
@@ -819,7 +819,7 @@ x-group:
       environment:
         NGINX_PORT: 80
         NGINX_SERVER_NAMES: site1.test
-        NGINX_CONTENT: "Hello from internet DN (site1.test)\n"
+        NGINX_CONTENT: "Service ID: site1.test\nInstance ID: 10.0.224.5\n"
       networks:
         test-net:
           ipv4_address: 10.0.224.5
@@ -841,7 +841,7 @@ x-group:
       environment:
         NGINX_PORT: 80
         NGINX_SERVER_NAMES: site2.test
-        NGINX_CONTENT: "Hello from internet DN (site2.test)\n"
+        NGINX_CONTENT: "Service ID: site2.test\nInstance ID: 10.0.224.6\n"
       networks:
         test-net:
           ipv4_address: 10.0.224.6
@@ -863,7 +863,7 @@ x-group:
       environment:
         NGINX_PORT: 80
         NGINX_SERVER_NAMES: site3.test
-        NGINX_CONTENT: "Hello from internet DN (site3.test)\n"
+        NGINX_CONTENT: "Service ID: site3.test\nInstance ID: 10.0:224.7\n"
       networks:
         test-net:
           ipv4_address: 10.0.224.7
