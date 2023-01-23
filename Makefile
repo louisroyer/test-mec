@@ -77,7 +77,7 @@ curl/%:
 # Curl from a container and print headers
 curl_i/%:
 	@echo "$(COLOR_BLUE)====== CURL $(*D) ->  $(@F) ======$(COLOR_END)"
-	@echo "$(COLOR_RED)$(EXEC) $(*D)-debug bash -c \"$(CURL) $(@F)\"$(COLOR_END)"
+	@echo "$(COLOR_RED)$(EXEC) $(*D)-debug bash -c \"$(CURL_I) $(@F)\"$(COLOR_END)"
 	@$(EXEC) $(*D)-debug bash -c "$(CURL_I) $(@F)"
 
 # Wait for a key press
