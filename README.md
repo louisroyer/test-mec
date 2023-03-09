@@ -37,7 +37,7 @@ If you want to use Free5GC's UPF, some commented lines are in `free5gc/Dockerfil
 Some Docker Images are weekly updated on [DockerHub](https://hub.docker.com/search?q=louisroyer) (RAN and debug containers), for the moment you will have to build most of them because I consider them not yet ready to upload on DockerHub.
 The above command will download images online and build the missing ones from Dockerfile hosted on this repository. To use your own images (for example a debug image with more tools), replace it in `docker-compose.yaml`. 
 
-## license
+## License
 - Dockerfiles, configuration, scripts, documentation, and in a general fashion all files directly hosted in this git repository are under MIT license.
 - For softwares distributed in docker images that I host on DockerHub, refer to licenses of such softwares (I package them using `.deb` so licenses are indicated in `/usr/share/doc/*/copyright`).
 - For softwares that **you** download while building **your own** images, please refer to corresponding projects. They are under various FOSS licenses, but I don't distribute their source code/binaries. If you redistribute them it is your own responsability to do it under their license terms.
