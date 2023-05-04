@@ -877,15 +877,7 @@ x-group:
       network_mode: service:site3
 
 services:
-  <<: *group-ue
-  <<: *group-gnb
-  <<: *group-upf-i
-  <<: *group-upf-a
-  <<: *group-core-network-main-nf
-  <<: *group-core-network-aux-nf
-  <<: *group-mec-dn
-  <<: *group-internet-dn
-  <<: *group-trunks
+  <<: [*group-ue, *group-gnb, *group-upf-i, *group-upf-a, *group-core-network-main-nf, *group-core-network-aux-nf, *group-mec-dn, *group-internet-dn, *group-trunks]
 
 networks:
   ran-net:
