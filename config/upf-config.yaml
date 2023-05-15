@@ -5,9 +5,9 @@ configuration:
   debugLevel: info
   ReportCaller: false
   pfcp:
-    - addr: 10.0.210.3
+    - addr: 10.0.204.3
   gtpu:
-    - addr: 10.0.216.2
+    - addr: 10.0.203.2
   dnn_list:
     - dnn: sliceA
       cidr: 10.0.222.0/24

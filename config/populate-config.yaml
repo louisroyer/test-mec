@@ -22,10 +22,6 @@ slices:
     sd: 010203
     varqi: 9
     dnn: sliceA
-  - sst: 01
-    sd: 112233
-    varqi: 9
-    dnn: sliceB
 
 # All IMSI of UEs
 imsi:

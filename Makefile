@@ -23,11 +23,9 @@ default: u
 # Start containers
 u:
 	$(DC) $(DEBUG) up -d
-	$(DC) $(SOCKS) up -d
 # Shutdown containers
 d:
 	$(DC) $(DEBUG) down
-	$(DC) $(SOCKS) down 
 
 # Restart containers
 r: d u

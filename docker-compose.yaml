@@ -1,12 +1,4 @@
 x-define:
-  x-entrypoint-mec: &entrypoint-mec # TODO A dedicated image to do this lightfully
-    image: louisroyer/network-debug 
-    restart: "no" # oneshot
-    cap_add:
-      - NET_ADMIN
-    volumes:
-      - ./entrypoint-mec.sh:/usr/local/bin/entrypoint.sh:ro
-    entrypoint: entrypoint.sh
   x-entrypoint-test-dn: &entrypoint-test-dn # TODO A dedicated image to do this lightfully
     image: louisroyer/network-debug 
     restart: "no" # oneshot
@@ -30,21 +22,13 @@ x-define:
         - NET_ADMIN
       profiles:
         - debug-lvl2
-  x-socks: &socks
-    image: microsocks
-    build:
-      context: ./microsocks
-    profiles:
-        - socks
   x-ue:
     x-ue-environment-common: &ue-environment-common
       MCC: "001"
       MNC: "01"
       GNBS: |-
         - "10.0.200.130"
-        - "10.0.200.131"
         - "fd00:d0cc:e700:1111:1:8000:0:2"
-        - "fd00:d0cc:e700:1111:1:8000:0:3"
     x-ue-environment-sliceA: &ue-environment-sliceA
       <<: *ue-environment-common
       CONFIGURED_NSSAI: |-
@@ -59,20 +43,6 @@ x-define:
           slice:
             sst: 1
             sd: 0x010203
-    x-ue-environment-sliceB: &ue-environment-sliceB
-      <<: *ue-environment-common
-      CONFIGURED_NSSAI: |-
-        - sst: 1
-          sd: 0x112233
-      DEFAULT_NSSAI: |-
-        - sst: 1
-          ds: 0x112233
-      SESSIONS: |-
-        - type: "IPv4"
-          apn: "sliceB"
-          slice:
-            sst: 1
-            sd: 0x112233
     x-ue-common: &ue-common
       image: louisroyer/ueransim-ue
       cap_add:
@@ -88,7 +58,7 @@ x-define:
         ran-net: # automatic allocation for UEs
 
 x-group:
-  x-group-ue: &group-ue # ue1, ue2, ue3, ue4 + debug
+  x-group-ue: &group-ue # ue1 + debug
     ue1:
       <<: *ue-common
       container_name: ue1
@@ -100,61 +70,12 @@ x-group:
       <<: *debug-common
       container_name: ue1-debug
       network_mode: service:ue1
-    ue1-socks:
-      <<: *socks
-      container_name: ue1-socks
-      network_mode: service:ue1
-    ue2:
-      <<: *ue-common
-      container_name: ue2
-      hostname: ue2
-      environment:
-        <<: *ue-environment-sliceA
-        MSISDN: "0000000002"
-    ue2-debug:
-      <<: *debug-common
-      container_name: ue2-debug
-      network_mode: service:ue2
-    ue2-socks:
-      <<: *socks
-      container_name: ue2-socks
-      network_mode: service:ue2
-    ue3:
-      <<: *ue-common
-      container_name: ue3
-      hostname: ue3
-      environment:
-        <<: *ue-environment-sliceB
-        MSISDN: "0000000003"
-    ue3-debug:
-      <<: *debug-common
-      container_name: ue3-debug
-      network_mode: service:ue3
-    ue3-socks:
-      <<: *socks
-      container_name: ue3-socks
-      network_mode: service:ue3
-    ue4:
-      <<: *ue-common
-      container_name: ue4
-      hostname: ue4
-      environment:
-        <<: *ue-environment-sliceB
-        MSISDN: "0000000004"
-    ue4-debug:
-      <<: *debug-common
-      container_name: ue4-debug
-      network_mode: service:ue4
-    ue4-socks:
-      <<: *socks
-      container_name: ue4-socks
-      network_mode: service:ue4
-  x-group-gnb: &group-gnb # gnb1, gnb2
+  x-group-gnb: &group-gnb # gnb1
     gnb1:
       container_name: gnb1
       hostname: gnb1
       depends_on:
-        - mec-upf1
+        - upf1
         - amf1
       build:
         context: ./ueransim
@@ -181,12 +102,12 @@ x-group:
         - NCI=0x000000010
         - LINK_IP=fd00:d0cc:e700:1111:1:8000:0:2
           #- LINK_IP=10.0.200.130
-        - NGAP_IP=10.0.213.2
-          #- NGAP_IP=fd00:d0cc:e700:1111:2::2
-        - GTP_IP=10.0.201.2
-          #- GTP_IP=fd00:d0cc:e700:1111:4::2
-        - AMF_IP=10.0.214.3
-            #- AMF_IP=fd00:d0cc:e700:1111:3::3
+        - NGAP_IP=10.0.202.2
+          #- NGAP_IP=fd00:d0cc:e700:1111:2:8000:0:2
+        - GTP_IP=10.0.203.3
+          #- GTP_IP=fd00:d0cc:e700:1111:3:8000:0:3
+        - AMF_IP=10.0.202.3
+          #- AMF_IP=fd00:d0cc:e700:1111:2:8000:0:3
         - SST_LIST=1
         - SD_LIST=0x010203
         - TAC=1
@@ -194,138 +115,13 @@ x-group:
         ran-net:
           ipv4_address: 10.0.200.130
           ipv6_address: fd00:d0cc:e700:1111:1:8000:0:2
-        tn-cp-gw-net:
-          ipv4_address: 10.0.213.2
-          ipv6_address: fd00:d0cc:e700:1111:2::2
-        mec-net:
-          ipv4_address: 10.0.201.2
-          ipv6_address: fd00:d0cc:e700:1111:4::2
-    gnb2:
-      container_name: gnb2
-      hostname: gnb2
-      depends_on:
-        - mec-upf2
-        - amf1
-      build:
-        context: ./ueransim
-        target: ueransim-gnb
-        args:
-          IPERF2_RELEASE: 2-1-4
-      image: ueransim-gnb
-      volumes:
-        - ./config/templates/config-gnb.yaml:/etc/ueransim/config-template.yaml:ro
-        - ./config/templates/scripts/config-gnb.sh:/usr/local/bin/config.sh:ro
-        - ./config/routing-gnb.sh:/usr/local/bin/routing.sh:ro
-      command: -c /etc/ueransim/config.yaml
-      cap_add:
-        - NET_ADMIN
-      sysctls:
-        - net.ipv6.conf.all.disable_ipv6=0
-      environment:
-        - ROUTING=routing.sh
-        - CONFIG_SCRIPT=config.sh
-        - TEMPLATE=/etc/ueransim/config-template.yaml
-        - CONFIG_FILE=/etc/ueransim/config.yaml
-        - MCC=001
-        - MNC=01
-        - NCI=0x000000010
-        - LINK_IP=fd00:d0cc:e700:1111:1:8000:0:3
-          #- LINK_IP=10.0.200.130
-        - NGAP_IP=10.0.213.5
-          #- NGAP_IP=fd00:d0cc:e700:1111:2::5
-        - GTP_IP=10.0.201.4
-          #- GTP_IP=fd00:d0cc:e700:1111:4::4
-        - AMF_IP=10.0.214.3
-            #- AMF_IP=fd00:d0cc:e700:1111:3::3
-        - SST_LIST=1
-        - SD_LIST=0x112233
-        - TAC=1
-      networks:
-        ran-net:
-          ipv4_address: 10.0.200.131
-          ipv6_address: fd00:d0cc:e700:1111:1:8000:0:3
-        tn-cp-gw-net:
-          ipv4_address: 10.0.213.5
-          ipv6_address: fd00:d0cc:e700:1111:2::5
-        mec-net:
-          ipv4_address: 10.0.201.4
-          ipv6_address: fd00:d0cc:e700:1111:4::4
-  x-group-upf-i: &group-upf-i # mec-upf1, mec-upf2
-    mec-upf1:
-      container_name: mec-upf1
-      hostname: mec-upf1
-      restart: always
-      depends_on:
-        - upf1
-      build:
-        context: ./nextmn-upf
-        target: nextmn-upf
-      image: nextmn-upf
-      working_dir: /volume
-      volumes:
-        - ../nextmn-upf/config/mec-upf-testmecupf.yaml:/etc/upfd/config.yaml:ro
-        - ./config/mec-upf1-routing.sh:/usr/local/bin/routing.sh:ro
-        - ../nextmn-upf:/volume:ro
-      command: -c /etc/upfd/config.yaml
-      cap_add:
-        - NET_ADMIN
-      devices:
-        - "/dev/net/tun"
-      sysctls:
-        - net.ipv4.ip_forward=1
-        - net.ipv6.conf.all.disable_ipv6=0
-      environment:
-        - FORCE_REINSTALL=1
-        - ROUTING=routing.sh
-        - CONFIG_FILE=/etc/upfd/config.yaml
-      networks:
-        mec-net:
-          ipv4_address: 10.0.201.3
-          ipv6_address: fd00:d0cc:e700:1111:4::3
-        test-mec-net:
-          ipv4_address: 10.0.223.2
-        tn-cp-gw-net:
-          ipv4_address: 10.0.213.3
-          ipv6_address: fd00:d0cc:e700:1111:2::3
-        tn-sliceA-gw-net:
-          ipv4_address: 10.0.215.2
-    mec-upf2:
-      container_name: mec-upf2
-      hostname: mec-upf2
-      restart: always
-      depends_on:
-        - upf2
-      build:
-        context: ./nextmn-upf
-        target: nextmn-upf
-      image: nextmn-upf
-      working_dir: /volume
-      volumes:
-        - ../nextmn-upf/config/mec-upf2-testmecupf.yaml:/etc/upfd/config.yaml:ro
-        - ./config/mec-upf2-routing.sh:/usr/local/bin/routing.sh:ro
-        - ../nextmn-upf:/volume:ro
-      command: -c /etc/upfd/config.yaml
-      cap_add:
-        - NET_ADMIN
-      devices:
-        - "/dev/net/tun"
-      sysctls:
-        - net.ipv4.ip_forward=1
-        - net.ipv6.conf.all.disable_ipv6=0
-      environment:
-        - FORCE_REINSTALL=1
-        - ROUTING=routing.sh
-        - CONFIG_FILE=/etc/upfd/config.yaml
-      networks:
-        mec-net:
-          ipv4_address: 10.0.201.5
-          ipv6_address: fd00:d0cc:e700:1111:4::5
-        tn-cp-gw-net:
-          ipv4_address: 10.0.213.6
-          ipv6_address: fd00:d0cc:e700:1111:2::6
-        tn-sliceA-gw-net:
-          ipv4_address: 10.0.215.4
-  x-group-upf-a: &group-upf-a # upf1, upf2
+        n2-net:
+          ipv4_address: 10.0.202.2
+          ipv6_address: fd00:d0cc:e700:1111:2:8000:0:2
+        n3-net:
+          ipv4_address: 10.0.203.3
+          ipv6_address: fd00:d0cc:e700:1111:3:8000:0:3
+  x-group-upf-a: &group-upf-a # upf1
     upf1:
       container_name: upf1
       hostname: upf1
@@ -336,7 +132,7 @@ x-group:
       image: nextmn-upf
       working_dir: /volume
       volumes:
-        - ../nextmn-upf/config/upf1-testmecupf.yaml:/etc/upfd/config.yaml:ro
+        - ./config/upf1-nextmn-upf.yaml:/etc/upfd/config.yaml:ro
         - ./config/upf1-routing.sh:/usr/local/bin/routing.sh:ro
         - ../nextmn-upf:/volume:ro
       command: -c /etc/upfd/config.yaml
@@ -351,43 +147,13 @@ x-group:
         - ROUTING=routing.sh
         - CONFIG_FILE=/etc/upfd/config.yaml
       networks:
+        n3-net:
+          ipv4_address: 10.0.203.2
+          ipv6_address: fd00:d0cc:e700:1111:3:8000:0:2
         n4-net:
-          ipv4_address: 10.0.210.3
+          ipv4_address: 10.0.204.3
         test-net:
           ipv4_address: 10.0.224.2
-        tn-sliceA-st-net:
-          ipv4_address: 10.0.216.2
-    upf2:
-      container_name: upf2
-      hostname: upf2
-      restart: always
-      build:
-        context: ./nextmn-upf
-        target: nextmn-upf 
-      image: nextmn-upf
-      working_dir: /volume
-      volumes:
-        - ../nextmn-upf/config/upf2-testmecupf.yaml:/etc/upfd/config.yaml:ro
-        - ./config/upf2-routing.sh:/usr/local/bin/routing.sh:ro
-        - ../nextmn-upf:/volume:ro
-      command: -c /etc/upfd/config.yaml
-      cap_add:
-        - NET_ADMIN
-      devices:
-        - "/dev/net/tun"
-      sysctls:
-        - net.ipv4.ip_forward=1
-      environment:
-        - FORCE_REINSTALL=1
-        - ROUTING=routing.sh
-        - CONFIG_FILE=/etc/upfd/config.yaml
-      networks:
-        n4-net:
-          ipv4_address: 10.0.210.5
-        test-net:
-          ipv4_address: 10.0.224.4
-        tn-sliceA-st-net:
-          ipv4_address: 10.0.216.4
   x-group-core-network-aux-nf: &group-core-network-aux-nf # f5gc-populate, nrf, mongodb, ausf, nssf, udm, upr, pcf
     free5gc-populate:
       container_name: free5gc-populate
@@ -552,8 +318,8 @@ x-group:
         TEMPLATE: "/etc/amf/config-template.yaml"
         CONFIG_FILE: "/etc/amf/config.yaml"
         CONFIG_SCRIPT: "config.sh"
-        NGAP_IP: "10.0.214.3"
-        #NGAP_IP: "fd00:d0cc:e700:1111:3::3"
+        NGAP_IP: "10.0.202.3"
+        #NGAP_IP: "fd00:d0cc:e700:1111:2::3"
         SBI_REGISTER_IP: "amf1.sbi-net"
         SBI_BINDING_IP: "10.0.211.4"
         MCC: "001"
@@ -561,23 +327,22 @@ x-group:
         AMF_ID: "000001"
         AMF_NAME: "AMF1"
         NRF_URI: "http://nrf.sbi-net:8000"
-        DNN_LIST: "sliceA sliceB"
-        SST_LIST: "1 1"
-        SD_LIST: "010203 112233"
+        DNN_LIST: "sliceA"
+        SST_LIST: "1"
+        SD_LIST: "010203"
         TAC: "1"
         LOCALITY: "loc1"
       networks:
         sbi-net:
           ipv4_address: 10.0.211.4
-        tn-cp-st-net:
-          ipv4_address: 10.0.214.3
-          ipv6_address: fd00:d0cc:e700:1111:3::3
+        n2-net:
+          ipv4_address: 10.0.202.3
+          ipv6_address: fd00:d0cc:e700:1111:3:8000:0:3
     smf1:
       container_name: smf1
       hostname: smf1
       restart: always
       depends_on:
-        - mec-upf1
         - upf1
         - nrf
       build:
@@ -597,195 +362,9 @@ x-group:
       command: --config /etc/smf/smf-config.yaml --uerouting /etc/smf/ue-routing.yaml
       networks:
         n4-net:
-          ipv4_address: 10.0.210.2
+          ipv4_address: 10.0.204.2
         sbi-net:
           ipv4_address: 10.0.211.3
-  x-group-trunks: &group-trunks # trunks-cp, trunks-up, trunks-mec, st-router
-    cp-st-router:
-      container_name: cp-st-router
-      hostname: cp-st-router
-      restart: always
-      build:
-        context: ./router
-      image: router
-      volumes:
-        - ./config/routing-cp-st-router.sh:/usr/local/bin/routing.sh:ro
-      environment:
-        - ROUTING=routing.sh
-      cap_add:
-        - NET_ADMIN
-      sysctls:
-        - net.ipv4.ip_forward=1
-      networks:
-        tn-cp-st-net:
-          ipv4_address: 10.0.214.2
-          ipv6_address: fd00:d0cc:e700:1111:3::2
-        n4-net:
-          ipv4_address: 10.0.210.4
-    trunks-cp:
-      container_name: trunks-cp
-      hostname: trunks-cp
-      restart: always
-      image: trunks
-      build:
-        context: ./trunks
-        args:
-          TRUNKS_RELEASE: V2.0.1
-      command: --config /etc/trunks/trunks.yaml --acm
-      volumes:
-        - ./config/trunks-cp.yaml:/etc/trunks/trunks.yaml:ro
-        - ./config/routing-trunk-cp.sh:/usr/local/bin/routing.sh:ro
-      environment:
-        - ROUTING=routing.sh
-      cap_add:
-        - NET_ADMIN
-      sysctls:
-        - net.ipv4.ip_forward=1
-        - net.ipv6.conf.all.disable_ipv6=0
-        - net.ipv6.conf.all.forwarding=1
-      networks:
-        tn-cp-st-net:
-          ipv4_address: 10.0.214.4
-          ipv6_address: fd00:d0cc:e700:1111:3::4
-        tn-cp-gw-net:
-          ipv4_address: 10.0.213.4
-          ipv6_address: fd00:d0cc:e700:1111:2::4
-    trunks-up:
-      container_name: trunks-up
-      hostname: trunks-up
-      restart: always
-      image: trunks
-      build:
-        context: ./trunks
-        args:
-          TRUNKS_RELEASE: V2.0.1
-      command: --config /etc/trunks/trunks.yaml --acm
-      volumes:
-        - ./config/trunks-up.yaml:/etc/trunks/trunks.yaml:ro
-        - ./config/routing-trunk-up.sh:/usr/local/bin/routing.sh:ro
-      environment:
-        - ROUTING=routing.sh
-      cap_add:
-        - NET_ADMIN
-      sysctls:
-        - net.ipv4.ip_forward=1
-      networks:
-        tn-sliceA-st-net:
-          ipv4_address: 10.0.216.3
-        tn-sliceA-gw-net:
-          ipv4_address: 10.0.215.3
-    trunks-mec:
-      container_name: trunks-mec
-      hostname: trunks-mec
-      restart: always
-      image: trunks
-      build:
-        context: ./trunks
-        args:
-          TRUNKS_RELEASE: V2.0.1
-      command: --config /etc/trunks/trunks.yaml --acm
-      volumes:
-        - ./config/trunks-mec.yaml:/etc/trunks/trunks.yaml:ro
-        - ./config/routing-trunk-mec.sh:/usr/local/bin/routing.sh:ro
-      environment:
-        - ROUTING=routing.sh
-      cap_add:
-        - NET_ADMIN
-      sysctls:
-        - net.ipv4.ip_forward=1
-      networks:
-        tn-mec-st-net:
-          ipv4_address: 10.0.218.3
-        tn-mec-gw-net:
-          ipv4_address: 10.0.217.3
-  x-group-mec-dn: &group-mec-dn # mec-dns
-    mec-dns:
-      container_name: mec-dns
-      hostname: mec-dns
-      image: bind9
-      build:
-        context: ./bind9
-      command: -g -p 53
-      volumes:
-        - ./bind9/mec-named.conf.local:/etc/bind/named.conf.local:ro
-        - ./bind9/named.conf.options:/etc/bind/named.conf.options:ro
-        - ./bind9/test-mec.db:/etc/bind/zones/test.db:ro
-        - ./config/routing-mec-dns.sh:/usr/local/bin/routing.sh:ro
-      environment:
-        - ROUTING=routing.sh
-      cap_add:
-        - NET_ADMIN
-      networks:
-        test-mec-net:
-          ipv4_address: 10.0.223.3
-        tn-mec-gw-net:
-          ipv4_address: 10.0.217.2
-    mec-site1:
-      container_name: mec-site1
-      hostname: mec-site1
-      image: nginx
-      volumes:
-        - ./nginx/templates:/etc/nginx/templates:ro
-        - /home/louis/Vidéos:/usr/share/nginx/videos:ro
-      environment:
-        NGINX_PORT: 80
-        NGINX_SERVER_NAMES: site1.mec.test site1.test
-        NGINX_CONTENT: "Service ID: site1.test\nInstance IDs: site1.mec.test, 10.0.223.4\n"
-      networks:
-        test-mec-net:
-          ipv4_address: 10.0.223.4
-    mec-site1-debug:
-      <<: *debug-lvl2-common
-      container_name: mec-site1-debug
-      network_mode: service:mec-site1
-    mec-site1-entrypoint:
-      <<: *entrypoint-mec
-      container_name: mec-site1-entrypoint
-      network_mode: service:mec-site1
-    mec-site2:
-      container_name: mec-site2
-      hostname: mec-site2
-      image: nginx
-      volumes:
-        - ./nginx/templates:/etc/nginx/templates:ro
-        - /home/louis/Vidéos:/usr/share/nginx/videos:ro
-      environment:
-        NGINX_PORT: 80
-        NGINX_SERVER_NAMES: site2.test
-        NGINX_CONTENT: "Service ID: site2.test\nInstance IDs: site2.mec.test, 10.0.223.5\n"
-      networks:
-        test-mec-net:
-          ipv4_address: 10.0.223.5
-    mec-site2-debug:
-      <<: *debug-lvl2-common
-      container_name: mec-site2-debug
-      network_mode: service:mec-site2
-    mec-site2-entrypoint:
-      <<: *entrypoint-mec
-      container_name: mec-site2-entrypoint
-      network_mode: service:mec-site2
-    mec-site3:
-      container_name: mec-site3
-      hostname: mec-site3
-      image: nginx
-      volumes:
-        - ./nginx/templates:/etc/nginx/templates:ro
-        - /home/louis/Vidéos:/usr/share/nginx/videos:ro
-      environment:
-        NGINX_PORT: 80
-        NGINX_SERVER_NAMES: site3.mec.test
-        NGINX_CONTENT: "Service ID: site3.test\nInstance IDs: site3.mec.test, 10.0.223.6\n"
-      networks:
-        test-mec-net:
-          ipv4_address: 10.0.223.6
-    mec-site3-debug:
-      <<: *debug-lvl2-common
-      container_name: mec-site3-debug
-      network_mode: service:mec-site3
-    mec-site3-entrypoint:
-      <<: *entrypoint-mec
-      container_name: mec-site3-entrypoint
-      network_mode: service:mec-site3
   x-group-internet-dn: &group-internet-dn # dns
     dns:
       container_name: dns
@@ -807,15 +386,12 @@ x-group:
       networks:
         test-net:
           ipv4_address: 10.0.224.3
-        tn-mec-st-net:
-          ipv4_address: 10.0.218.2
     site1:
       container_name: site1
       hostname: site1
       image: nginx
       volumes:
         - ./nginx/templates:/etc/nginx/templates:ro
-        - /home/louis/Vidéos:/usr/share/nginx/videos:ro
       environment:
         NGINX_PORT: 80
         NGINX_SERVER_NAMES: site1.test
@@ -831,53 +407,9 @@ x-group:
       <<: *entrypoint-test-dn
       container_name: site1-entrypoint
       network_mode: service:site1
-    site2:
-      container_name: site2
-      hostname: site2
-      image: nginx
-      volumes:
-        - ./nginx/templates:/etc/nginx/templates:ro
-        - /home/louis/Vidéos:/usr/share/nginx/videos:ro
-      environment:
-        NGINX_PORT: 80
-        NGINX_SERVER_NAMES: site2.test
-        NGINX_CONTENT: "Service ID: site2.test\nInstance ID: 10.0.224.6\n"
-      networks:
-        test-net:
-          ipv4_address: 10.0.224.6
-    site2-debug:
-      <<: *debug-lvl2-common
-      container_name: site2-debug
-      network_mode: service:site2
-    site2-entrypoint:
-      <<: *entrypoint-test-dn
-      container_name: site2-entrypoint
-      network_mode: service:site2
-    site3:
-      container_name: site3
-      hostname: site3
-      image: nginx
-      volumes:
-        - ./nginx/templates-site3:/etc/nginx/templates:ro
-        - /home/louis/Vidéos:/usr/share/nginx/videos:ro
-      environment:
-        NGINX_PORT: 80
-        NGINX_SERVER_NAMES: site3.test
-        NGINX_CONTENT: "Service ID: site3.test\nInstance ID: 10.0:224.7\n"
-      networks:
-        test-net:
-          ipv4_address: 10.0.224.7
-    site3-debug:
-      <<: *debug-lvl2-common
-      container_name: site3-debug
-      network_mode: service:site3
-    site3-entrypoint:
-      <<: *entrypoint-test-dn
-      container_name: site3-entrypoint
-      network_mode: service:site3
 
 services:
-  <<: [*group-ue, *group-gnb, *group-upf-i, *group-upf-a, *group-core-network-main-nf, *group-core-network-aux-nf, *group-mec-dn, *group-internet-dn, *group-trunks]
+  <<: [*group-ue, *group-gnb, *group-upf-a, *group-core-network-main-nf, *group-core-network-aux-nf, *group-internet-dn]
 
 networks:
   ran-net:
@@ -896,75 +428,30 @@ networks:
         - subnet: fd00:d0cc:e700:1111:1::/80
           ip_range: fd00:d0cc:e700:1111:1::/81
           gateway: fd00:d0cc:e700:1111:1:8000:0:1
-  mec-net:
-    name: mec-net
-    enable_ipv6: true
+  n2-net:
+    name: n2-net
     driver: bridge
     driver_opts:
-      com.docker.network.bridge.name: br-mec-net 
+      com.docker.network.bridge.name: br-n2-net 
     ipam:
       driver: default
       config:
-        - subnet: 10.0.201.0/24
-        - subnet: fd00:d0cc:e700:1111:4::/80
-  tn-cp-gw-net:
-    name: tn-cp-gw-net
-    enable_ipv6: true
-    driver: bridge
-    driver_opts:
-      com.docker.network.bridge.name: br-tn-cp-gw-net 
-    ipam:
-      driver: default
-      config:
-        - subnet: 10.0.213.0/24
+        - subnet: 10.0.202.0/24
         - subnet: fd00:d0cc:e700:1111:2::/80
-  tn-cp-st-net:
-    name: tn-cp-st-net
-    enable_ipv6: true
+          ip_range: fd00:d0cc:e700:1111:2::/81
+          gateway: fd00:d0cc:e700:1111:2:8000:0:1
+  n3-net:
+    name: n3-net
     driver: bridge
     driver_opts:
-      com.docker.network.bridge.name: br-tn-cp-st-net 
+      com.docker.network.bridge.name: br-n3-net 
     ipam:
       driver: default
       config:
-        - subnet: 10.0.214.0/24
+        - subnet: 10.0.203.0/24
         - subnet: fd00:d0cc:e700:1111:3::/80
-  tn-sliceA-gw-net:
-    name: tn-sliceA-gw-net
-    driver: bridge
-    driver_opts:
-      com.docker.network.bridge.name: br-tn-sA-gw-net 
-    ipam:
-      driver: default
-      config:
-        - subnet: 10.0.215.0/24
-  tn-sliceA-st-net:
-    name: tn-sliceA-st-net
-    driver: bridge
-    driver_opts:
-      com.docker.network.bridge.name: br-tn-sA-st-net 
-    ipam:
-      driver: default
-      config:
-        - subnet: 10.0.216.0/24
-  tn-mec-gw-net:
-    name: tn-mec-gw-net
-    driver: bridge
-    driver_opts:
-      com.docker.network.bridge.name: br-tn-mec-gw
-    ipam:
-      driver: default
-      config:
-        - subnet: 10.0.217.0/24
-  tn-mec-st-net:
-    name: tn-mec-st-net
-    driver: bridge
-    driver_opts:
-      com.docker.network.bridge.name: br-tn-mec-st 
-    ipam:
-      driver: default
-      config:
-        - subnet: 10.0.218.0/24
+          ip_range: fd00:d0cc:e700:1111:3::/81
+          gateway: fd00:d0cc:e700:1111:3:8000:0:1
   n4-net:
     name: n4-net
     driver: bridge
@@ -973,7 +460,7 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 10.0.210.0/24
+        - subnet: 10.0.204.0/24
   sbi-net:
     name: sbi-net
     driver: bridge
@@ -992,15 +479,6 @@ networks:
       driver: default
       config:
         - subnet: 10.0.212.0/24
-  test-mec-net:
-    name: test-mec-net
-    driver: bridge
-    driver_opts:
-      com.docker.network.bridge.name: br-test-mec-net 
-    ipam:
-      driver: default
-      config:
-        - subnet: 10.0.223.0/24
   test-net:
     name: test-net
     driver: bridge
