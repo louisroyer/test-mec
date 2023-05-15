@@ -127,6 +127,8 @@ x-group:
       hostname: upf1
       restart: always
       build:
+        args:
+          NEXTMNUPF_RELEASE: v0.0.3
         context: ./nextmn-upf
         target: nextmn-upf 
       image: nextmn-upf
@@ -134,7 +136,6 @@ x-group:
       volumes:
         - ./config/upf1-nextmn-upf.yaml:/etc/upfd/config.yaml:ro
         - ./config/upf1-routing.sh:/usr/local/bin/routing.sh:ro
-        - ../nextmn-upf:/volume:ro
       command: -c /etc/upfd/config.yaml
       cap_add:
         - NET_ADMIN
@@ -143,7 +144,6 @@ x-group:
       sysctls:
         - net.ipv4.ip_forward=1
       environment:
-        - FORCE_REINSTALL=1
         - ROUTING=routing.sh
         - CONFIG_FILE=/etc/upfd/config.yaml
       networks:

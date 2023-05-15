@@ -29,13 +29,16 @@ In your `/etc/docker/daemon.json`, make sure to enable ipv6 and buildkit. Here i
 
 ## Build
 The current version use [NextMN-UPF](https://github.com/louisroyer/nextmn-upf), an experimental UPF I developped. It may not be very stable, and breaking changes may still happen.
-For the moment, to be able to use it you need to build it appart and put the binary at `../nextmn-upf/nextmn-upf` from this directory.
+~~For the moment, to be able to use it you need to build it appart and put the binary at `../nextmn-upf/nextmn-upf` from this directory.~~ (EDIT: not needed no stage-ueransim branch)
 
 If you want to use Free5GC's UPF, some commented lines are in `free5gc/Dockerfile`. You can uncomment them to build the image (don't forget to also do replacements in `docker-compose.yaml`). Since Free5GC has recoded their UPF from C to Golang, I had not tested it well, so expect to run into some issues. Main difference between Free5GC's UPF and NextMN's UPF: Free5GC use GTP kernel module (you have to install the module [gtp5g](https://github.com/free5gc/gtp5g)), while NextMN runs entirely in userland.
 
 - `docker compose --profile debug build`
 Some Docker Images are weekly updated on [DockerHub](https://hub.docker.com/search?q=louisroyer) (RAN and debug containers), for the moment you will have to build most of them because I consider them not yet ready to upload on DockerHub.
 The above command will download images online and build the missing ones from Dockerfile hosted on this repository. To use your own images (for example a debug image with more tools), replace it in `docker-compose.yaml`. 
+
+## Architecture (branch stage-ueransim only)
+![Architecture](./images/stage-ueransim-architecture.svg)
 
 ## License
 - Dockerfiles, configuration, scripts, documentation, and in a general fashion all files directly hosted in this git repository are under MIT license.
@@ -47,9 +50,6 @@ The above command will download images online and build the missing ones from Do
 ```text
 # Start containers
 $ make u
-
-# Run testbed (press enter after each test)
-$ make test
 
 # Enter debug container of ue1
 $ make t/ue1
