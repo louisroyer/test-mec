@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+ip route replace default via 10.0.224.1 dev n6-0 proto static
 iptables -t nat -A POSTROUTING -o "$(ip r ls |awk '{print $5; exit}')" -j MASQUERADE
 iptables -I FORWARD -j ACCEPT
 
