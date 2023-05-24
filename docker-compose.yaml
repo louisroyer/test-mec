@@ -433,6 +433,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.name: br-n2-net 
+      com.docker.network.container_iface_prefix: n2-
     ipam:
       driver: default
       config:
@@ -445,6 +446,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.name: br-n3-net 
+      com.docker.network.container_iface_prefix: n3-
     ipam:
       driver: default
       config:
@@ -457,6 +459,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.name: br-n4-net 
+      com.docker.network.container_iface_prefix: n4-
     ipam:
       driver: default
       config:
@@ -483,7 +486,8 @@ networks:
     name: test-net
     driver: bridge
     driver_opts:
-      com.docker.network.bridge.name: br-test-net 
+      com.docker.network.bridge.name: br-n6-net 
+      com.docker.network.container_iface_prefix: n6-
     ipam:
       driver: default
       config:
