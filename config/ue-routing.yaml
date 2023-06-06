@@ -35,3 +35,12 @@ ueRoutingInfo: # the list of UE routing information
         B: upf-sliceB
     specificPath:
 
+  SR:
+    members:
+      - imsi-001010000000005
+      - imsi-001010000000006
+    topology:
+      - A: ran-area1-3
+        B: upf-sliceC
+    specificPath:
+

@@ -33,6 +33,14 @@ configuration:
           dns: 
             ipv4: 9.9.9.9
             ipv6: 2001:4860:4860::8888
+    - sNssai:
+        sst: 1
+        sd: 112234
+      dnnInfos:
+        - dnn: sliceC
+          dns: 
+            ipv4: 9.9.9.9
+            ipv6: 2001:4860:4860::8888
   plmnList:
     - mcc: "001"
       mnc: "01"
@@ -47,6 +55,8 @@ configuration:
       ran-area1-2:
         type: AN
 
+      ran-area1-3:
+        type: AN
 
       upf-mec-area1:
         type: UPF
@@ -123,6 +133,24 @@ configuration:
             endpoints:
               - 10.0.216.4
             networkInstance: sliceB
+
+      upf-sliceC:
+        type: UPF
+        nodeID: 10.0.210.6
+        sNssaiUpfInfos:
+          - sNssai:
+              sst: 1
+              sd: 112234
+            dnnUpfInfoList:
+              - dnn: sliceC
+                pools:
+                  - cidr: 10.0.112.0/24
+        interfaces:
+          - interfaceType: N3
+            endpoints:
+              - "fd00:51D5:0000:1:71::" # End.M.GTP6.D instance
+            networkInstance: sliceC
+
     links:
       - A: ran-area1-1
         B: upf-mec-area1
@@ -132,6 +160,8 @@ configuration:
         B: upf-mec-area2
       - A: upf-mec-area2
         B: upf-sliceB
+      - A: ran-area1-3
+        B: upf-sliceC
 
   nrfUri: http://nrf.sbi-net:8000 
     #  locality: loc1

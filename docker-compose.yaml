@@ -15,7 +15,32 @@ x-define:
     volumes:
       - ./entrypoint-test-dn.sh:/usr/local/bin/entrypoint.sh:ro
     entrypoint: entrypoint.sh
-
+  x-nextmn-srv6-ctrl: &nextmn-srv6-ctrl
+    restart: always
+    build:
+      context: ./nextmn-srv6-ctrl
+      args:
+        NEXTMNSRCTRL_RELEASE: v0.0.1
+    image: nextmn-srv6-ctrl
+    command: ["-c", "/etc/nextmn-srv6-ctrl/config.yaml"]
+  x-nextmn-srv6: &nextmn-srv6
+    restart: always
+    build:
+      context: ./nextmn-srv6
+      args:
+        NEXTMNSR_RELEASE: v0.0.4
+    image: nextmn-srv6
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+      - net.ipv4.ip_forward=1
+      - net.ipv6.conf.all.forwarding=1
+      - net.ipv6.conf.all.seg6_enabled=1
+      - net.ipv6.conf.default.seg6_enabled=1
+    command: ["-c", "/etc/nextmn-srv6/config.yaml"]
+    devices:
+      - "/dev/net/tun:/dev/net/tun"
   x-debug:
     x-debug-common: &debug-common
       image: louisroyer/network-debug
@@ -40,19 +65,17 @@ x-define:
     x-ue-environment-common: &ue-environment-common
       MCC: "001"
       MNC: "01"
-      GNBS: |-
-        - "10.0.200.130"
-        - "10.0.200.131"
-        - "fd00:d0cc:e700:1111:1:8000:0:2"
-        - "fd00:d0cc:e700:1111:1:8000:0:3"
     x-ue-environment-sliceA: &ue-environment-sliceA
       <<: *ue-environment-common
+      GNBS: |-
+        #- "10.0.200.130"
+        - "fd00:d0cc:e700:1111:1:8000:0:2"
       CONFIGURED_NSSAI: |-
         - sst: 1
           sd: 0x010203
       DEFAULT_NSSAI: |-
         - sst: 1
-          ds: 0x010203
+          sd: 0x010203
       SESSIONS: |-
         - type: "IPv4"
           apn: "sliceA"
@@ -61,18 +84,38 @@ x-define:
             sd: 0x010203
     x-ue-environment-sliceB: &ue-environment-sliceB
       <<: *ue-environment-common
+      GNBS: |-
+        #- "10.0.200.131"
+        - "fd00:d0cc:e700:1111:1:8000:0:3"
       CONFIGURED_NSSAI: |-
         - sst: 1
           sd: 0x112233
       DEFAULT_NSSAI: |-
         - sst: 1
-          ds: 0x112233
+          sd: 0x112233
       SESSIONS: |-
         - type: "IPv4"
           apn: "sliceB"
           slice:
             sst: 1
             sd: 0x112233
+    x-ue-environment-sliceC: &ue-environment-sliceC
+      <<: *ue-environment-common
+      GNBS: |-
+        #- "10.0.200.132"
+        - "fd00:d0cc:e700:1111:1:8000:0:4"
+      CONFIGURED_NSSAI: |-
+        - sst: 1
+          sd: 0x112234
+      DEFAULT_NSSAI: |-
+        - sst: 1
+          sd: 0x112234
+      SESSIONS: |-
+        - type: "IPv4"
+          apn: "sliceC"
+          slice:
+            sst: 1
+            sd: 0x112234
     x-ue-common: &ue-common
       image: louisroyer/ueransim-ue
       cap_add:
@@ -88,6 +131,59 @@ x-define:
         ran-net: # automatic allocation for UEs
 
 x-group:
+  x-group-nextmn-srv6: &group-nextmn-srv6
+    nextmn-srv6-ctrl:
+      <<: *nextmn-srv6-ctrl
+      container_name: nextmn-srv6-ctrl
+      hostname: nextmn-srv6-ctrl
+      volumes:
+        - ./config/nextmn-srv6-ctrl.yaml:/etc/nextmn-srv6-ctrl/config.yaml
+      networks:
+        n4-net:
+          ipv4_address: 10.0.210.6
+    nextmn-srv6-ctrl-debug:
+      <<: *debug-common
+      container_name: nextmn-srv6-ctrl-debug
+      network_mode: service:nextmn-srv6-ctrl
+#    nextmn-srv6-dn:
+#      <<: *nextmn-srv6
+#      container_name: nextmn-srv6-dn
+#      hostname: nextmn-srv6-dn
+#      volumes:
+#        - ./config/nextmn-srv6-pre-init-hook.sh:/usr/local/bin/pre-init-hook.sh:ro
+#        - ./config/nextmn-srv6-ipv4-post-init-hook.sh:/usr/local/bin/post-init-hook.sh:ro
+#        - ./config/nextmn-srv6-ipv4.yaml:/etc/nextmn-srv6/config.yaml
+#      networks:
+#        srv6-net:
+#          ipv4_address: 10.0.219.3
+#          ipv6_address: fd00:d0cc:e700:3333:1::3
+#        test-net:
+#          ipv4_address: 10.0.223.8
+#    nextmn-srv6-dn-debug:
+#      <<: *debug-common
+#      container_name: nextmn-srv6-dn-debug
+#      network_mode: service:nextmn-srv6-dn
+    nextmn-srv6-gtp:
+      <<: *nextmn-srv6
+      container_name: nextmn-srv6-gtp
+      hostname: nextmn-srv6-gtp
+      volumes:
+        - ./config/nextmn-srv6-pre-init-hook.sh:/usr/local/bin/pre-init-hook.sh:ro
+        - ./config/nextmn-srv6-gtp-post-init-hook.sh:/usr/local/bin/post-init-hook.sh:ro
+        - ./config/nextmn-srv6-gtp.yaml:/etc/nextmn-srv6/config.yaml
+      networks:
+        mec-net:
+          ipv4_address: 10.0.201.7
+          ipv6_address: fd00:d0cc:e700:1111:4::7
+        srv6-net:
+          ipv4_address: 10.0.219.2
+          ipv6_address: fd00:d0cc:e700:3333:1::2
+    nextmn-srv6-gtp-debug:
+      <<: *debug-common
+      container_name: nextmn-srv6-gtp-debug
+      network_mode: service:nextmn-srv6-gtp
+    
+
   x-group-ue: &group-ue # ue1, ue2, ue3, ue4 + debug
     ue1:
       <<: *ue-common
@@ -149,6 +245,36 @@ x-group:
       <<: *socks
       container_name: ue4-socks
       network_mode: service:ue4
+    ue5:
+      <<: *ue-common
+      container_name: ue5
+      hostname: ue5
+      environment:
+        <<: *ue-environment-sliceC
+        MSISDN: "0000000005"
+    ue5-debug:
+      <<: *debug-common
+      container_name: ue5-debug
+      network_mode: service:ue5
+    ue5-socks:
+      <<: *socks
+      container_name: ue5-socks
+      network_mode: service:ue5
+    ue6:
+      <<: *ue-common
+      container_name: ue6
+      hostname: ue6
+      environment:
+        <<: *ue-environment-sliceC
+        MSISDN: "0000000006"
+    ue6-debug:
+      <<: *debug-common
+      container_name: ue6-debug
+      network_mode: service:ue6
+    ue6-socks:
+      <<: *socks
+      container_name: ue6-socks
+      network_mode: service:ue6
   x-group-gnb: &group-gnb # gnb1, gnb2
     gnb1:
       container_name: gnb1
@@ -178,7 +304,7 @@ x-group:
         - CONFIG_FILE=/etc/ueransim/config.yaml
         - MCC=001
         - MNC=01
-        - NCI=0x000000010
+        - NCI=0x000000001
         - LINK_IP=fd00:d0cc:e700:1111:1:8000:0:2
           #- LINK_IP=10.0.200.130
         - NGAP_IP=10.0.213.2
@@ -230,7 +356,7 @@ x-group:
         - MNC=01
         - NCI=0x000000010
         - LINK_IP=fd00:d0cc:e700:1111:1:8000:0:3
-          #- LINK_IP=10.0.200.130
+          #- LINK_IP=10.0.200.131
         - NGAP_IP=10.0.213.5
           #- NGAP_IP=fd00:d0cc:e700:1111:2::5
         - GTP_IP=10.0.201.4
@@ -250,6 +376,58 @@ x-group:
         mec-net:
           ipv4_address: 10.0.201.4
           ipv6_address: fd00:d0cc:e700:1111:4::4
+    gnb3:
+      container_name: gnb3
+      hostname: gnb3
+      depends_on:
+        - nextmn-srv6-gtp
+#        - nextmn-srv6-dn
+        - nextmn-srv6-ctrl
+        - amf1
+      build:
+        context: ./ueransim
+        target: ueransim-gnb
+        args:
+          IPERF2_RELEASE: 2-1-4
+      image: ueransim-gnb
+      volumes:
+        - ./config/templates/config-gnb.yaml:/etc/ueransim/config-template.yaml:ro
+        - ./config/templates/scripts/config-gnb.sh:/usr/local/bin/config.sh:ro
+        - ./config/routing-gnb.sh:/usr/local/bin/routing.sh:ro
+      command: -c /etc/ueransim/config.yaml
+      cap_add:
+        - NET_ADMIN
+      sysctls:
+        - net.ipv6.conf.all.disable_ipv6=0
+      environment:
+        - ROUTING=routing.sh
+        - CONFIG_SCRIPT=config.sh
+        - TEMPLATE=/etc/ueransim/config-template.yaml
+        - CONFIG_FILE=/etc/ueransim/config.yaml
+        - MCC=001
+        - MNC=01
+        - NCI=0x000000011
+        - LINK_IP=fd00:d0cc:e700:1111:1:8000:0:4
+          #- LINK_IP=10.0.200.132
+        - NGAP_IP=10.0.213.7
+          #- NGAP_IP=fd00:d0cc:e700:1111:2::7
+          #- GTP_IP=10.0.201.6
+        - GTP_IP=fd00:d0cc:e700:1111:4::6
+        - AMF_IP=10.0.214.3
+            #- AMF_IP=fd00:d0cc:e700:1111:3::3
+        - SST_LIST=1
+        - SD_LIST=0x112234
+        - TAC=1
+      networks:
+        ran-net:
+          ipv4_address: 10.0.200.132
+          ipv6_address: fd00:d0cc:e700:1111:1:8000:0:4
+        tn-cp-gw-net:
+          ipv4_address: 10.0.213.7
+          ipv6_address: fd00:d0cc:e700:1111:2::7
+        mec-net:
+          ipv4_address: 10.0.201.6
+          ipv6_address: fd00:d0cc:e700:1111:4::6
   x-group-upf-i: &group-upf-i # mec-upf1, mec-upf2
     mec-upf1:
       container_name: mec-upf1
@@ -561,9 +739,9 @@ x-group:
         AMF_ID: "000001"
         AMF_NAME: "AMF1"
         NRF_URI: "http://nrf.sbi-net:8000"
-        DNN_LIST: "sliceA sliceB"
-        SST_LIST: "1 1"
-        SD_LIST: "010203 112233"
+        DNN_LIST: "sliceA sliceB sliceC"
+        SST_LIST: "1 1 1"
+        SD_LIST: "010203 112233 112234"
         TAC: "1"
         LOCALITY: "loc1"
       networks:
@@ -877,7 +1055,7 @@ x-group:
       network_mode: service:site3
 
 services:
-  <<: [*group-ue, *group-gnb, *group-upf-i, *group-upf-a, *group-core-network-main-nf, *group-core-network-aux-nf, *group-mec-dn, *group-internet-dn, *group-trunks]
+  <<: [*group-ue, *group-gnb, *group-upf-i, *group-upf-a, *group-core-network-main-nf, *group-core-network-aux-nf, *group-mec-dn, *group-internet-dn, *group-trunks, *group-nextmn-srv6]
 
 networks:
   ran-net:
@@ -907,6 +1085,17 @@ networks:
       config:
         - subnet: 10.0.201.0/24
         - subnet: fd00:d0cc:e700:1111:4::/80
+  srv6-net:
+    name: srv6-net
+    enable_ipv6: true
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-sr-net 
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.0.219.0/24
+        - subnet: fd00:d0cc:e700:3333:1::/80
   tn-cp-gw-net:
     name: tn-cp-gw-net
     enable_ipv6: true

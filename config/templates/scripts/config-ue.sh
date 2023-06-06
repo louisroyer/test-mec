@@ -23,7 +23,7 @@ for SST in $SST_LIST; do
 	SESSIONS_SUB="${SESSIONS_SUB}\n  - type: 'IPv4'\n    apn: '${APN_ARRAY[$COUNT_SNSSAI]}'\n    slice:"
 	SESSIONS_SUB="${SESSIONS_SUB}\n      sst: ${SST}"
 	SESSIONS_SUB="${SESSIONS_SUB}\n      sd: ${SD_ARRAY[$COUNT_SNSSAI]}"
-	COUNT_SNSSAI=${COUNT_SNSSAI+1}
+	COUNT_SNSSAI=$((COUNT_SNSSAI+1))
 done
 sed -i "s/%S_NSSAI/${S_NSSAI_SUB}/g" "${CONFIG_FILE}"
 sed -i "s/%SESSIONS/${SESSIONS_SUB}/g" "${CONFIG_FILE}"
