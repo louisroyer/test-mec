@@ -129,6 +129,27 @@ x-define:
       command: [" "]
       networks:
         ran-net: # automatic allocation for UEs
+  x-gnb:
+    x-gnb-common: &gnb-common
+      image: louisroyer/ueransim-gnb
+      cap_add:
+        - NET_ADMIN
+      devices:
+        - "/dev/net/tun:/dev/net/tun"
+      sysctls:
+        - net.ipv6.conf.all.disable_ipv6=0
+      command: [" "]
+    x-gnb-environment-common: &gnb-environment-common
+      MCC: "001"
+      MNC: "01"
+      NCI: "0x000000001"
+      ID_LEN: 32
+      TAC: 1
+      AMF_CONFIGS: |-
+        - address: 10.0.214.3
+          port : 38412
+        #- address: fd00:d0cc:e700:1111:3::3
+        #  port : 38412
 
 x-group:
   x-group-nextmn-srv6: &group-nextmn-srv6
@@ -275,47 +296,28 @@ x-group:
       <<: *socks
       container_name: ue6-socks
       network_mode: service:ue6
-  x-group-gnb: &group-gnb # gnb1, gnb2
+  x-group-gnb: &group-gnb # gnb1, gnb2, gnb3
     gnb1:
+      <<: *gnb-common
       container_name: gnb1
       hostname: gnb1
       depends_on:
         - mec-upf1
         - amf1
-      build:
-        context: ./ueransim
-        target: ueransim-gnb
-        args:
-          IPERF2_RELEASE: 2-1-4
-      image: ueransim-gnb
       volumes:
-        - ./config/templates/config-gnb.yaml:/etc/ueransim/config-template.yaml:ro
-        - ./config/templates/scripts/config-gnb.sh:/usr/local/bin/config.sh:ro
         - ./config/routing-gnb.sh:/usr/local/bin/routing.sh:ro
-      command: -c /etc/ueransim/config.yaml
-      cap_add:
-        - NET_ADMIN
-      sysctls:
-        - net.ipv6.conf.all.disable_ipv6=0
       environment:
-        - ROUTING=routing.sh
-        - CONFIG_SCRIPT=config.sh
-        - TEMPLATE=/etc/ueransim/config-template.yaml
-        - CONFIG_FILE=/etc/ueransim/config.yaml
-        - MCC=001
-        - MNC=01
-        - NCI=0x000000001
-        - LINK_IP=fd00:d0cc:e700:1111:1:8000:0:2
-          #- LINK_IP=10.0.200.130
-        - NGAP_IP=10.0.213.2
-          #- NGAP_IP=fd00:d0cc:e700:1111:2::2
-        - GTP_IP=10.0.201.2
-          #- GTP_IP=fd00:d0cc:e700:1111:4::2
-        - AMF_IP=10.0.214.3
-            #- AMF_IP=fd00:d0cc:e700:1111:3::3
-        - SST_LIST=1
-        - SD_LIST=0x010203
-        - TAC=1
+        <<: *gnb-environment-common
+        ROUTING_SCRIPT: "routing.sh"
+        RLS_IP: "fd00:d0cc:e700:1111:1:8000:0:2"
+        #RLS_IP: "10.0.200.130"
+        N2_IP: "10.0.213.2"
+        #N2_IP: "fd00:d0cc:e700:1111:2::2"
+        N3_IP: "10.0.201.2"
+        #N3_IP: "fd00:d0cc:e700:1111:4::2"
+        SUPPORTED_NSSAIS: |-
+          - sst: 1
+            sd: 0x010203
       networks:
         ran-net:
           ipv4_address: 10.0.200.130
@@ -326,46 +328,31 @@ x-group:
         mec-net:
           ipv4_address: 10.0.201.2
           ipv6_address: fd00:d0cc:e700:1111:4::2
+    gnb1-debug:
+      <<: *debug-common
+      container_name: gnb1-debug
+      network_mode: service:gnb1
     gnb2:
+      <<: *gnb-common
       container_name: gnb2
       hostname: gnb2
       depends_on:
         - mec-upf2
         - amf1
-      build:
-        context: ./ueransim
-        target: ueransim-gnb
-        args:
-          IPERF2_RELEASE: 2-1-4
-      image: ueransim-gnb
       volumes:
-        - ./config/templates/config-gnb.yaml:/etc/ueransim/config-template.yaml:ro
-        - ./config/templates/scripts/config-gnb.sh:/usr/local/bin/config.sh:ro
         - ./config/routing-gnb.sh:/usr/local/bin/routing.sh:ro
-      command: -c /etc/ueransim/config.yaml
-      cap_add:
-        - NET_ADMIN
-      sysctls:
-        - net.ipv6.conf.all.disable_ipv6=0
       environment:
-        - ROUTING=routing.sh
-        - CONFIG_SCRIPT=config.sh
-        - TEMPLATE=/etc/ueransim/config-template.yaml
-        - CONFIG_FILE=/etc/ueransim/config.yaml
-        - MCC=001
-        - MNC=01
-        - NCI=0x000000010
-        - LINK_IP=fd00:d0cc:e700:1111:1:8000:0:3
-          #- LINK_IP=10.0.200.131
-        - NGAP_IP=10.0.213.5
-          #- NGAP_IP=fd00:d0cc:e700:1111:2::5
-        - GTP_IP=10.0.201.4
-          #- GTP_IP=fd00:d0cc:e700:1111:4::4
-        - AMF_IP=10.0.214.3
-            #- AMF_IP=fd00:d0cc:e700:1111:3::3
-        - SST_LIST=1
-        - SD_LIST=0x112233
-        - TAC=1
+        <<: *gnb-environment-common
+        ROUTING_SCRIPT: "routing.sh"
+        RLS_IP: "fd00:d0cc:e700:1111:1:8000:0:3"
+        #RLS_IP: "10.0.200.131"
+        N2_IP: "10.0.213.5"
+        #N2_IP: "fd00:d0cc:e700:1111:2::5"
+        N3_IP: "10.0.201.4"
+        #N3_IP: "fd00:d0cc:e700:1111:4::4"
+        SUPPORTED_NSSAIS: |-
+          - sst: 1
+            sd: 0x112233
       networks:
         ran-net:
           ipv4_address: 10.0.200.131
@@ -376,7 +363,12 @@ x-group:
         mec-net:
           ipv4_address: 10.0.201.4
           ipv6_address: fd00:d0cc:e700:1111:4::4
+    gnb2-debug:
+      <<: *debug-common
+      container_name: gnb2-debug
+      network_mode: service:gnb2
     gnb3:
+      <<: *gnb-common
       container_name: gnb3
       hostname: gnb3
       depends_on:
@@ -384,40 +376,20 @@ x-group:
 #        - nextmn-srv6-dn
         - nextmn-srv6-ctrl
         - amf1
-      build:
-        context: ./ueransim
-        target: ueransim-gnb
-        args:
-          IPERF2_RELEASE: 2-1-4
-      image: ueransim-gnb
       volumes:
-        - ./config/templates/config-gnb.yaml:/etc/ueransim/config-template.yaml:ro
-        - ./config/templates/scripts/config-gnb.sh:/usr/local/bin/config.sh:ro
         - ./config/routing-gnb.sh:/usr/local/bin/routing.sh:ro
-      command: -c /etc/ueransim/config.yaml
-      cap_add:
-        - NET_ADMIN
-      sysctls:
-        - net.ipv6.conf.all.disable_ipv6=0
       environment:
-        - ROUTING=routing.sh
-        - CONFIG_SCRIPT=config.sh
-        - TEMPLATE=/etc/ueransim/config-template.yaml
-        - CONFIG_FILE=/etc/ueransim/config.yaml
-        - MCC=001
-        - MNC=01
-        - NCI=0x000000011
-        - LINK_IP=fd00:d0cc:e700:1111:1:8000:0:4
-          #- LINK_IP=10.0.200.132
-        - NGAP_IP=10.0.213.7
-          #- NGAP_IP=fd00:d0cc:e700:1111:2::7
-          #- GTP_IP=10.0.201.6
-        - GTP_IP=fd00:d0cc:e700:1111:4::6
-        - AMF_IP=10.0.214.3
-            #- AMF_IP=fd00:d0cc:e700:1111:3::3
-        - SST_LIST=1
-        - SD_LIST=0x112234
-        - TAC=1
+        <<: *gnb-environment-common
+        ROUTING_SCRIPT: "routing.sh"
+        RLS_IP: "fd00:d0cc:e700:1111:1:8000:0:4"
+        #RLS_IP: "10.0.200.132"
+        N2_IP: "10.0.213.7"
+        #N2_IP: "fd00:d0cc:e700:1111:2::7"
+        N3_IP: "10.0.201.6"
+        #N3_IP: "fd00:d0cc:e700:1111:4::6"
+        SUPPORTED_NSSAIS: |-
+          - sst: 1
+            sd: 0x112234
       networks:
         ran-net:
           ipv4_address: 10.0.200.132
@@ -428,6 +400,10 @@ x-group:
         mec-net:
           ipv4_address: 10.0.201.6
           ipv6_address: fd00:d0cc:e700:1111:4::6
+    gnb3-debug:
+      <<: *debug-common
+      container_name: gnb3-debug
+      network_mode: service:gnb3
   x-group-upf-i: &group-upf-i # mec-upf1, mec-upf2
     mec-upf1:
       container_name: mec-upf1
@@ -1101,6 +1077,7 @@ networks:
     enable_ipv6: true
     driver: bridge
     driver_opts:
+      com.docker.network.container_iface_prefix: n2-
       com.docker.network.bridge.name: br-tn-cp-gw-net 
     ipam:
       driver: default

@@ -100,17 +100,17 @@ configuration:
   # ReportCaller: enable the caller report or not, value: true or false
 logger:
   AMF:
-    debugLevel: info
+    debugLevel: trace
     ReportCaller: false
   NAS:
-    debugLevel: info
+    debugLevel: trace
     ReportCaller: false
   FSM:
-    debugLevel: info
+    debugLevel: trace
     ReportCaller: false
   NGAP:
-    debugLevel: info
+    debugLevel: trace
     ReportCaller: false
   Aper:
-    debugLevel: info
+    debugLevel: trace
     ReportCaller: false

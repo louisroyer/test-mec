@@ -27,7 +27,7 @@ slices:
     varqi: 9
     dnn: sliceB
   - sst: 01
-    sd: 223344
+    sd: 112234
     varqi: 9
     dnn: sliceC
 
