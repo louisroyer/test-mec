@@ -106,16 +106,16 @@ x-define:
         - "fd00:d0cc:e700:1111:1:8000:0:4"
       CONFIGURED_NSSAI: |-
         - sst: 1
-          sd: 0x112234
+          sd: 0x012345
       DEFAULT_NSSAI: |-
         - sst: 1
-          sd: 0x112234
+          sd: 0x012345
       SESSIONS: |-
         - type: "IPv4"
           apn: "sliceC"
           slice:
             sst: 1
-            sd: 0x112234
+            sd: 0x012345
     x-ue-common: &ue-common
       image: louisroyer/ueransim-ue
       cap_add:
@@ -142,7 +142,6 @@ x-define:
     x-gnb-environment-common: &gnb-environment-common
       MCC: "001"
       MNC: "01"
-      NCI: "0x000000001"
       ID_LEN: 32
       TAC: 1
       AMF_CONFIGS: |-
@@ -272,7 +271,7 @@ x-group:
       hostname: ue5
       environment:
         <<: *ue-environment-sliceC
-        MSISDN: "0000000005"
+        MSISDN: "0000000011"
     ue5-debug:
       <<: *debug-common
       container_name: ue5-debug
@@ -281,21 +280,21 @@ x-group:
       <<: *socks
       container_name: ue5-socks
       network_mode: service:ue5
-    ue6:
-      <<: *ue-common
-      container_name: ue6
-      hostname: ue6
-      environment:
-        <<: *ue-environment-sliceC
-        MSISDN: "0000000006"
-    ue6-debug:
-      <<: *debug-common
-      container_name: ue6-debug
-      network_mode: service:ue6
-    ue6-socks:
-      <<: *socks
-      container_name: ue6-socks
-      network_mode: service:ue6
+#    ue6:
+#      <<: *ue-common
+#      container_name: ue6
+#      hostname: ue6
+#      environment:
+#        <<: *ue-environment-sliceC
+#        MSISDN: "0000000006"
+#    ue6-debug:
+#      <<: *debug-common
+#      container_name: ue6-debug
+#      network_mode: service:ue6
+#    ue6-socks:
+#      <<: *socks
+#      container_name: ue6-socks
+#      network_mode: service:ue6
   x-group-gnb: &group-gnb # gnb1, gnb2, gnb3
     gnb1:
       <<: *gnb-common
@@ -308,6 +307,7 @@ x-group:
         - ./config/routing-gnb.sh:/usr/local/bin/routing.sh:ro
       environment:
         <<: *gnb-environment-common
+        NCI: "0x000000001"
         ROUTING_SCRIPT: "routing.sh"
         RLS_IP: "fd00:d0cc:e700:1111:1:8000:0:2"
         #RLS_IP: "10.0.200.130"
@@ -343,6 +343,7 @@ x-group:
         - ./config/routing-gnb.sh:/usr/local/bin/routing.sh:ro
       environment:
         <<: *gnb-environment-common
+        NCI: "0x000000002"
         ROUTING_SCRIPT: "routing.sh"
         RLS_IP: "fd00:d0cc:e700:1111:1:8000:0:3"
         #RLS_IP: "10.0.200.131"
@@ -380,16 +381,17 @@ x-group:
         - ./config/routing-gnb.sh:/usr/local/bin/routing.sh:ro
       environment:
         <<: *gnb-environment-common
+        NCI: "0x000000003"
         ROUTING_SCRIPT: "routing.sh"
         RLS_IP: "fd00:d0cc:e700:1111:1:8000:0:4"
         #RLS_IP: "10.0.200.132"
         N2_IP: "10.0.213.7"
         #N2_IP: "fd00:d0cc:e700:1111:2::7"
-        N3_IP: "10.0.201.6"
-        #N3_IP: "fd00:d0cc:e700:1111:4::6"
+        #N3_IP: "10.0.201.6"
+        N3_IP: "fd00:d0cc:e700:1111:4::6"
         SUPPORTED_NSSAIS: |-
           - sst: 1
-            sd: 0x112234
+            sd: 0x012345
       networks:
         ran-net:
           ipv4_address: 10.0.200.132
@@ -717,7 +719,7 @@ x-group:
         NRF_URI: "http://nrf.sbi-net:8000"
         DNN_LIST: "sliceA sliceB sliceC"
         SST_LIST: "1 1 1"
-        SD_LIST: "010203 112233 112234"
+        SD_LIST: "010203 112233 012345"
         TAC: "1"
         LOCALITY: "loc1"
       networks:

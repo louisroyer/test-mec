@@ -3,7 +3,15 @@ info:
   description: Routing information for UE
 
 ueRoutingInfo: # the list of UE routing information
-
+  SR:
+    members:
+      - imsi-001010000000011
+      - imsi-001010000000005
+      - imsi-001010000000006
+    topology:
+      - A: ran-area1-3
+        B: upf-sliceC
+    specificPath:
   MEH:
     members:
       - imsi-001010000000001
@@ -23,7 +31,6 @@ ueRoutingInfo: # the list of UE routing information
         path: [upf-mec-area1]
       - dest: 10.0.223.0/24 # mec.test
         path: [upf-mec-area1]
-
   NO-MEH:
     members:
       - imsi-001010000000003
@@ -33,14 +40,5 @@ ueRoutingInfo: # the list of UE routing information
         B: upf-mec-area2
       - A: upf-mec-area2
         B: upf-sliceB
-    specificPath:
-
-  SR:
-    members:
-      - imsi-001010000000005
-      - imsi-001010000000006
-    topology:
-      - A: ran-area1-3
-        B: upf-sliceC
     specificPath:
 

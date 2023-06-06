@@ -24,13 +24,20 @@ configuration:
         mcc: 001 # Mobile Country Code (3 digits string, digit: 0~9)
         mnc: 01 # Mobile Network Code (2 or 3 digits string, digit: 0~9)
       supportedSnssaiList: # Supported S-NSSAIs of the PLMN
+        - sst: 1
+          sd: 012345
         - sst: 1 # Slice/Service Type (uinteger, range: 0~255)
           sd: 010203 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
         - sst: 1
           sd: 112233
-        - sst: 1
-          sd: 112234
   nsiList: # List of available Network Slice Instance (NSI)
+    - snssai: # S-NSSAI of this NSI
+        sst: 1 # Slice/Service Type (uinteger, range: 0~255)
+        sd: 012345 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
+      nsiInformationList: # Information list of this NSI
+        # the NRF to be used to select the NFs/services within the selected NSI, and an optonal ID
+        - nrfId: http://nrf.sbi-net:8000/nnrf-nfm/v1/nf-instances
+          nsiId: 13
     - snssai: # S-NSSAI of this NSI
         sst: 1 # Slice/Service Type (uinteger, range: 0~255)
         sd: 010203 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
@@ -45,13 +52,6 @@ configuration:
         # the NRF to be used to select the NFs/services within the selected NSI, and an optonal ID
         - nrfId: http://nrf.sbi-net:8000/nnrf-nfm/v1/nf-instances
           nsiId: 12
-    - snssai: # S-NSSAI of this NSI
-        sst: 1 # Slice/Service Type (uinteger, range: 0~255)
-        sd: 112234 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
-      nsiInformationList: # Information list of this NSI
-        # the NRF to be used to select the NFs/services within the selected NSI, and an optonal ID
-        - nrfId: http://nrf.sbi-net:8000/nnrf-nfm/v1/nf-instances
-          nsiId: 13
   amfSetList: # List of AMF Sets that my be assigned by this NSSF
     - amfSetId: 1 # the AMF Set identifier
       amfList: # Instance ID of the AMFs in this set
@@ -66,12 +66,12 @@ configuration:
               mnc: 01 # Mobile Network Code (2 or 3 digits string, digit: 0~9)
             tac: 00001 # Tracking Area Code (uinteger, range: 0~16777215)
           supportedSnssaiList: # Supported S-NSSAIs of the tracking area
+            - sst: 1
+              sd: 012345
             - sst: 1 # Slice/Service Type (uinteger, range: 0~255)
               sd: 010203 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
             - sst: 1
               sd: 112233
-            - sst: 1
-              sd: 112234
   taList: # List of supported tracking area and their related information of this NSSF instance
     - tai: # Tracking Area Identity
         plmnId: # Public Land Mobile Network ID, <PLMN ID> = <MCC><MNC>
@@ -80,12 +80,12 @@ configuration:
         tac: 00001 # Tracking Area Code (uinteger, range: 0~16777215)
       accessType: 3GPP_ACCESS # Access type of the tracking area
       supportedSnssaiList: # List of supported S-NSSAIs of the tracking area
+        - sst: 1
+          sd: 012345
         - sst: 1 # Slice/Service Type (uinteger, range: 0~255)
           sd: 010203 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
         - sst: 1
           sd: 112233
-        - sst: 1
-          sd: 112234
 
 # the kind of log output
   # debugLevel: how detailed to output, value: trace, debug, info, warn, error, fatal, panic

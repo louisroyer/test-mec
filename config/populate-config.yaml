@@ -19,6 +19,10 @@ amf: 8000
 # List all the slices
 slices:
   - sst: 01
+    sd: 012345
+    varqi: 9
+    dnn: sliceC
+  - sst: 01
     sd: 010203
     varqi: 9
     dnn: sliceA
@@ -26,13 +30,10 @@ slices:
     sd: 112233
     varqi: 9
     dnn: sliceB
-  - sst: 01
-    sd: 112234
-    varqi: 9
-    dnn: sliceC
 
 # All IMSI of UEs
 imsi:
+  - imsi-001010000000011
   - imsi-001010000000001
   - imsi-001010000000002
   - imsi-001010000000003
