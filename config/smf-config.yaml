@@ -49,8 +49,9 @@ configuration:
         interfaces:
           - interfaceType: N3
             endpoints:
+              - "fd00:51D5:0000:1:71::"
               #- fd00:d0cc:e700:1111:3::2
-              - 10.0.203.2
+              #- 10.0.203.2
             networkInstance: sliceA
     links:
       - A: ran1
