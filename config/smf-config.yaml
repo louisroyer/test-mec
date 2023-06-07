@@ -1,5 +1,5 @@
 info:
-  version: 1.0.2
+  version: "1.0.7"
   description: SMF initial local configuration
 
 configuration:
@@ -30,7 +30,9 @@ configuration:
       mnc: "01"
 
   pfcp:
-    addr: 10.0.204.2
+    listenAddr: 10.0.204.2
+    externalAddr: 10.0.204.2
+    nodeID: 10.0.204.2
   userplaneInformation:
     upNodes:
       ran1:
@@ -52,7 +54,8 @@ configuration:
               - "fd00:51D5:0000:1:71::"
               #- fd00:d0cc:e700:1111:3::2
               #- 10.0.203.2
-            networkInstance: sliceA
+            networkInstances:
+              - sliceA
     links:
       - A: ran1
         B: upf1
@@ -60,20 +63,16 @@ configuration:
   nrfUri: http://nrf.sbi-net:8000 
     #  locality: loc1
   ulcl: false
+  t3591:
+    enable: true
+    expireTime: 6s
+    maxRetryTimes: 4
+  t3592:
+    enable: true
+    expireTime: 6s
+    maxRetryTimes: 4
 
 logger:
-  SMF:
-    debugLevel: trace
-    ReportCaller: false
-  NAS:
-    debugLevel: info
-    ReportCaller: false
-  NGAP:
-    debugLevel: info
-    ReportCaller: false
-  Aper:
-    debugLevel: info
-    ReportCaller: false
-  PFCP:
-    debugLevel: trace
-    ReportCaller: false
+  enable: true
+  level: trace
+  reportCaller: true
