@@ -75,8 +75,8 @@ RUN apt-get update -q && DEBIAN_FRONTEND=non-interactive apt-get install -qy --n
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /
-ENV TMPENV=4
-ENV BRANCH=fix-ipv4v6
+ENV TMPENV=5
+ENV BRANCH=main
 RUN  git -C / clone --depth 1 --quiet -b "$BRANCH"  https://github.com/louisroyer/free5gc-smf
 WORKDIR /free5gc-smf
 RUN mkdir /go/src/free5gc/bin -p
