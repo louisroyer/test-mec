@@ -48,6 +48,7 @@ x-define:
         - NET_ADMIN
       profiles:
         - debug
+      stop_grace_period: 0s
   x-debug-lvl2:
     x-debuglvl2-common: &debug-lvl2-common
       image: louisroyer/network-debug
@@ -55,12 +56,14 @@ x-define:
         - NET_ADMIN
       profiles:
         - debug-lvl2
+      stop_grace_period: 0s
   x-socks: &socks
     image: microsocks
     build:
       context: ./microsocks
     profiles:
         - socks
+    stop_grace_period: 0s
   x-ue:
     x-ue-environment-common: &ue-environment-common
       MCC: "001"
@@ -546,6 +549,7 @@ x-group:
           ipv4_address: 10.0.216.4
   x-group-core-network-aux-nf: &group-core-network-aux-nf # f5gc-populate, nrf, mongodb, ausf, nssf, udm, upr, pcf
     free5gc-populate:
+      restart: "no" # oneshot
       container_name: free5gc-populate
       hostname: free5gc-populate
       depends_on:
@@ -772,6 +776,7 @@ x-group:
         - NET_ADMIN
       sysctls:
         - net.ipv4.ip_forward=1
+      stop_grace_period: 0s
       networks:
         tn-cp-st-net:
           ipv4_address: 10.0.214.2
