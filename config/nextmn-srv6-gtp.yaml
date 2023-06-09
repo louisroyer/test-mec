@@ -3,19 +3,19 @@ iproute2:
   rtproto-number: 100
   post-init-hook: "post-init-hook.sh"
   pre-init-hook: "pre-init-hook.sh"
-locator: "fd00:51D5:0000:1::/64"
+locator: "fd00:51D5:0001::/48"
 endpoints:
-  - sid: "fd00:51D5:0000:1:1::/80"
+  - sid: "fd00:51D5:0001:0100::/56"
     behavior: "End"
-  - sid: "fd00:51D5:0000:1:69::/80"
-    behavior: "End.M.GTP6.E"
+  - sid: "fd00:51D5:0001:0200::/56"
+    behavior: "End.M.GTP4.E"
     options:
-      set-source-address: "fd00:51D5:0000:1:71::/128"
-  - sid: "fd00:51D5:0000:1:71::/128"
-    behavior: "End.M.GTP6.D"
+      set-source-address: "10.0.201.7/32"
+  - sid: "10.0.201.7/32"
+    behavior: "H.M.GTP4.D"
     options:
-      set-source-address: "fd00:51D5:0000:1:69::/128"
+      set-source-address: "fd00:51D5:0001:0200::/128"
 policy:
   segments-list:
-    - "fd00:51D5:0000:2:1::"
-    - "fd00:51D5:0000:2:11::"
+    - "fd00:51D5:0002:0100::"
+    - "fd00:51D5:0002:0200::"

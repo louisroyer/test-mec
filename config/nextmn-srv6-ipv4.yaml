@@ -3,10 +3,10 @@ iproute2:
   rtproto-number: 100
   post-init-hook: "post-init-hook.sh"
   pre-init-hook: "pre-init-hook.sh"
-locator: "fd00:51D5:0000:2::/64"
+locator: "fd00:51D5:0002::/48"
 endpoints:
-  - sid: "fd00:51D5:0000:2:11::/80"
-    behavior: "End.DX4"
-  - sid: "fd00:51D5:0000:2:1::/80"
+  - sid: "fd00:51D5:0002:0100::/56"
     behavior: "End"
+  - sid: "fd00:51D5:0002:0200::/56"
+    behavior: "End.DX4"
 
