@@ -48,7 +48,7 @@ x-define:
         - NET_ADMIN
       profiles:
         - debug
-      stop_grace_period: 0s
+      init: true
   x-debug-lvl2:
     x-debuglvl2-common: &debug-lvl2-common
       image: louisroyer/network-debug
@@ -56,14 +56,14 @@ x-define:
         - NET_ADMIN
       profiles:
         - debug-lvl2
-      stop_grace_period: 0s
+      init: true
   x-socks: &socks
     image: microsocks
     build:
       context: ./microsocks
     profiles:
         - socks
-    stop_grace_period: 0s
+    init: true
   x-ue:
     x-ue-environment-common: &ue-environment-common
       MCC: "001"
@@ -776,7 +776,7 @@ x-group:
         - NET_ADMIN
       sysctls:
         - net.ipv4.ip_forward=1
-      stop_grace_period: 0s
+      init: true
       networks:
         tn-cp-st-net:
           ipv4_address: 10.0.214.2
@@ -784,6 +784,7 @@ x-group:
         n4-net:
           ipv4_address: 10.0.210.4
     trunks-cp:
+      init: true
       container_name: trunks-cp
       hostname: trunks-cp
       restart: always
@@ -812,6 +813,7 @@ x-group:
           ipv4_address: 10.0.213.4
           ipv6_address: fd00:d0cc:e700:1111:2::4
     trunks-up:
+      init: true
       container_name: trunks-up
       hostname: trunks-up
       restart: always
@@ -836,6 +838,7 @@ x-group:
         tn-sliceA-gw-net:
           ipv4_address: 10.0.215.3
     trunks-mec:
+      init: true
       container_name: trunks-mec
       hostname: trunks-mec
       restart: always
@@ -861,6 +864,7 @@ x-group:
           ipv4_address: 10.0.217.3
   x-group-mec-dn: &group-mec-dn # mec-dns
     mec-dns:
+      init: true
       container_name: mec-dns
       hostname: mec-dns
       image: bind9
@@ -949,6 +953,7 @@ x-group:
       network_mode: service:mec-site3
   x-group-internet-dn: &group-internet-dn # dns
     dns:
+      init: true
       container_name: dns
       hostname: dns
       image: bind9
