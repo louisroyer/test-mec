@@ -134,7 +134,7 @@ x-define:
         - "/dev/net/tun:/dev/net/tun"
       sysctls:
         - net.ipv6.conf.all.disable_ipv6=0
-      dns: ##FIXME : docker compose replaces by its own dns
+      dns:
         - 10.0.224.3
       command: [" "]
       networks:
