@@ -53,6 +53,9 @@ x-define:
       profiles:
         - debug
       init: true
+  x-debug-ue: &debug-ue
+    <<: *debug-common
+
   x-debug-lvl2:
     x-debuglvl2-common: &debug-lvl2-common
       image: louisroyer/network-debug
@@ -131,7 +134,7 @@ x-define:
         - "/dev/net/tun:/dev/net/tun"
       sysctls:
         - net.ipv6.conf.all.disable_ipv6=0
-      dns:
+      dns: ##FIXME : docker compose replaces by its own dns
         - 10.0.224.3
       command: [" "]
       networks:
@@ -220,7 +223,7 @@ x-group:
         <<: *ue-environment-sliceA
         MSISDN: "0000000001"
     ue1-debug:
-      <<: *debug-common
+      <<: *debug-ue
       container_name: ue1-debug
       network_mode: service:ue1
     ue1-socks:
@@ -235,7 +238,7 @@ x-group:
         <<: *ue-environment-sliceA
         MSISDN: "0000000002"
     ue2-debug:
-      <<: *debug-common
+      <<: *debug-ue
       container_name: ue2-debug
       network_mode: service:ue2
     ue2-socks:
@@ -250,7 +253,7 @@ x-group:
         <<: *ue-environment-sliceB
         MSISDN: "0000000003"
     ue3-debug:
-      <<: *debug-common
+      <<: *debug-ue
       container_name: ue3-debug
       network_mode: service:ue3
     ue3-socks:
@@ -265,7 +268,7 @@ x-group:
         <<: *ue-environment-sliceB
         MSISDN: "0000000004"
     ue4-debug:
-      <<: *debug-common
+      <<: *debug-ue
       container_name: ue4-debug
       network_mode: service:ue4
     ue4-socks:
@@ -280,7 +283,7 @@ x-group:
         <<: *ue-environment-sliceC
         MSISDN: "0000000011"
     ue5-debug:
-      <<: *debug-common
+      <<: *debug-ue
       container_name: ue5-debug
       network_mode: service:ue5
     ue5-socks:
@@ -295,7 +298,7 @@ x-group:
 #        <<: *ue-environment-sliceC
 #        MSISDN: "0000000006"
 #    ue6-debug:
-#      <<: *debug-common
+#      <<: *debug-ue
 #      container_name: ue6-debug
 #      network_mode: service:ue6
 #    ue6-socks:
@@ -790,22 +793,42 @@ x-group:
       <<: *debug-lvl2-common
       container_name: cp-st-router-debug
       network_mode: service:cp-st-router
+    trunks-cp-entrypoint:
+      image: louisroyer/docker-setup
+      restart: "no" # oneshot
+      cap_add:
+        - NET_ADMIN
+      environment:
+        ONESHOT: "true"
+        ROUTES_INIT: |-
+          - add 10.0.210.0/24 via 10.0.214.2
+      container_name: trunks-cp-entrypoint
+      network_mode: service:trunks-cp
     trunks-cp:
       init: true
       container_name: trunks-cp
       hostname: trunks-cp
       restart: always
-      image: trunks
-      build:
-        context: ./trunks
-        args:
-          TRUNKS_RELEASE: V2.0.1
-      command: --config /etc/trunks/trunks.yaml --acm
-      volumes:
-        - ./config/trunks-cp.yaml:/etc/trunks/trunks.yaml:ro
-        - ./config/routing-trunk-cp.sh:/usr/local/bin/routing.sh:ro
+      image: louisroyer/trunks
+      command: --acm
       environment:
-        - ROUTING=routing.sh
+        NIC_GW: "10.0.213.4"
+        NIC_ST: "10.0.214.4"
+        BW_FORWARD: 10000
+        BW_RETURN: 2500
+        DELAY_VALUE: 45
+        DELAY_OFFSET: 5
+        ACM: |-
+          - weight: 1
+            duration: 10
+          - weight: 0.8
+            duration: 10
+          - weight: 0.9
+            duration: 10
+          - weight: 0.5
+            duration: 10
+          - weight: 0.7
+            duration: 10
       cap_add:
         - NET_ADMIN
       sysctls:
@@ -819,22 +842,40 @@ x-group:
         tn-cp-gw-net:
           ipv4_address: 10.0.213.4
           ipv6_address: fd00:d0cc:e700:1111:2::4
+    trunks-cp-debug:
+      <<: *debug-lvl2-common
+      container_name: trunks-cp-debug
+      network_mode: service:trunks-cp
     trunks-up:
       init: true
       container_name: trunks-up
       hostname: trunks-up
       restart: always
-      image: trunks
-      build:
-        context: ./trunks
-        args:
-          TRUNKS_RELEASE: V2.0.1
-      command: --config /etc/trunks/trunks.yaml --acm
-      volumes:
-        - ./config/trunks-up.yaml:/etc/trunks/trunks.yaml:ro
-        - ./config/routing-trunk-up.sh:/usr/local/bin/routing.sh:ro
+      image: louisroyer/trunks
+      command: --acm
       environment:
-        - ROUTING=routing.sh
+        ROUTING_SCRIPT: "routing-default.sh"
+        ROUTING_GW_IP: "10.0.216.3"
+        ROUTING_GW_NEXT_HOP: "10.0.216.2"
+        ROUTING_ST_IP: "10.0.215.3"
+        ROUTING_ST_NEXT_HOP: "10.0.215.2"
+        NIC_GW: "10.0.216.3"
+        NIC_ST: "10.0.215.3"
+        BW_FORWARD: 10000
+        BW_RETURN: 2500
+        DELAY_VALUE: 550
+        DELAY_OFFSET: 50
+        ACM: |-
+          - weight: 1
+            duration: 10
+          - weight: 0.8
+            duration: 10
+          - weight: 0.9
+            duration: 10
+          - weight: 0.5
+            duration: 10
+          - weight: 0.7
+            duration: 10
       cap_add:
         - NET_ADMIN
       sysctls:
@@ -844,22 +885,40 @@ x-group:
           ipv4_address: 10.0.216.3
         tn-sliceA-gw-net:
           ipv4_address: 10.0.215.3
+    trunks-up-debug:
+      <<: *debug-lvl2-common
+      container_name: trunks-up-debug
+      network_mode: service:trunks-up
     trunks-mec:
       init: true
       container_name: trunks-mec
       hostname: trunks-mec
       restart: always
-      image: trunks
-      build:
-        context: ./trunks
-        args:
-          TRUNKS_RELEASE: V2.0.1
-      command: --config /etc/trunks/trunks.yaml --acm
-      volumes:
-        - ./config/trunks-mec.yaml:/etc/trunks/trunks.yaml:ro
-        - ./config/routing-trunk-mec.sh:/usr/local/bin/routing.sh:ro
+      image: louisroyer/trunks
+      command: --acm
       environment:
-        - ROUTING=routing.sh
+        ROUTING: "routing-default.sh"
+        ROUTING_GW_IP: "10.0.217.3"
+        ROUTING_GW_NEXT_HOP: "10.0.217.2"
+        ROUTING_ST_IP: "10.0.218.3"
+        ROUTING_ST_NEXT_HOP: "10.0.218.2"
+        NIC_GW: "10.0.217.3"
+        NIC_ST: "10.0.218.3"
+        BW_FORWARD: 10000
+        BW_RETURN: 2500
+        DELAY_VALUE: 45
+        DELAY_OFFSET: 5
+        ACM: |-
+          - weight: 1
+            duration: 10
+          - weight: 0.8
+            duration: 10
+          - weight: 0.9
+            duration: 10
+          - weight: 0.5
+            duration: 10
+          - weight: 0.7
+            duration: 10
       cap_add:
         - NET_ADMIN
       sysctls:
@@ -869,6 +928,10 @@ x-group:
           ipv4_address: 10.0.218.3
         tn-mec-gw-net:
           ipv4_address: 10.0.217.3
+    trunks-mec-debug:
+      <<: *debug-lvl2-common
+      container_name: trunks-mec-debug
+      network_mode: service:trunks-mec
   x-group-mec-dn: &group-mec-dn # mec-dns
     mec-dns:
       init: true
