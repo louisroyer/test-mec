@@ -3,7 +3,7 @@ FROM golang:1.18 AS builder
 ARG NEXTMNSR_RELEASE
 RUN : ${NEXTMNSR_RELEASE:? Missing build-arg NEXTMNSR_RELEASE.} && GOPRIVATE=github.com/louisroyer/nextmn-srv6 go install github.com/louisroyer/nextmn-srv6@${NEXTMNSR_RELEASE}
 
-FROM debian:bullseye-slim as nextmn-srv6
+FROM debian:bookworm-slim as nextmn-srv6
 RUN apt-get update && DEBIAN_FRONTEND=non-interactive apt-get install -qy --no-install-recommends --no-install-suggests \
     iproute2 iptables  \
     && rm -rf /var/lib/apt/lists/*

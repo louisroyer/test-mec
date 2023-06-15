@@ -16,7 +16,7 @@ RUN : ${F5GC_RELEASE:? Missing build-arg F5GC_RELEASE.} && git -C /go/src clone 
 WORKDIR /go/src/free5gc
 RUN make nfs
 
-#FROM debian:bullseye-slim AS free5gc-upf
+#FROM debian:bookworm-slim AS free5gc-upf
 #RUN apt-get update -q && DEBIAN_FRONTEND=non-interactive apt-get install -qy --no-install-recommends --no-install-suggests \
 #    libmnl0 libyaml-0-2 iptables \
 #    iproute2 iputils-ping tshark ethtool \
@@ -43,7 +43,7 @@ RUN mkdir build
 WORKDIR /free5gc-upf/build
 RUN   cmake .. && make
 
-FROM debian:bullseye-slim AS free5gc-upf
+FROM debian:bookworm-slim AS free5gc-upf
 RUN apt-get update -q && DEBIAN_FRONTEND=non-interactive apt-get install -qy --no-install-recommends --no-install-suggests \
     libmnl0 libyaml-0-2 iptables \
     iproute2 iputils-ping tshark ethtool \
@@ -58,7 +58,7 @@ ENV CONFIG_SCRIPT ""
 ENTRYPOINT ["entrypoint.sh"]
 CMD ["-h"]
 
-FROM debian:bullseye-slim AS free5gc-amf
+FROM debian:bookworm-slim AS free5gc-amf
 RUN apt-get update -q && DEBIAN_FRONTEND=non-interactive apt-get install -qy --no-install-recommends --no-install-suggests \
     iproute2 iputils-ping tshark ethtool \
     && rm -rf /var/lib/apt/lists/*
@@ -83,7 +83,7 @@ WORKDIR /free5gc-smf/cmd
 RUN  CGO_ENABLED=0 go build -o /go/src/free5gc/bin/smf main.go
 
 
-FROM debian:bullseye-slim as free5gc-smf
+FROM debian:bookworm-slim as free5gc-smf
 RUN apt-get update -q && DEBIAN_FRONTEND=non-interactive apt-get install -qy --no-install-recommends --no-install-suggests \
     iproute2 iputils-ping tshark ethtool \
     && rm -rf /var/lib/apt/lists/*
@@ -95,42 +95,42 @@ ENV SLEEP ""
 ENTRYPOINT ["entrypoint.sh"]
 CMD ["-h"]
 
-FROM debian:bullseye-slim as free5gc-nrf
+FROM debian:bookworm-slim as free5gc-nrf
 COPY --from=builder /go/src/free5gc/bin/nrf /usr/local/bin/nrf
 ENTRYPOINT ["nrf"]
 CMD ["-h"]
 
-FROM debian:bullseye-slim as free5gc-ausf
+FROM debian:bookworm-slim as free5gc-ausf
 COPY --from=builder /go/src/free5gc/bin/ausf /usr/local/bin/ausf
 ENTRYPOINT ["ausf"]
 CMD ["-h"]
 
-FROM debian:bullseye-slim as free5gc-n3iwf
+FROM debian:bookworm-slim as free5gc-n3iwf
 COPY --from=builder /go/src/free5gc/bin/n3iwf /usr/local/bin/n3iwf
 ENTRYPOINT ["n3iwf"]
 CMD ["-h"]
 
-FROM debian:bullseye-slim as free5gc-nssf
+FROM debian:bookworm-slim as free5gc-nssf
 COPY --from=builder /go/src/free5gc/bin/nssf /usr/local/bin/nssf
 ENTRYPOINT ["nssf"]
 CMD ["-h"]
 
-FROM debian:bullseye-slim as free5gc-pcf
+FROM debian:bookworm-slim as free5gc-pcf
 COPY --from=builder /go/src/free5gc/bin/pcf /usr/local/bin/pcf
 ENTRYPOINT ["pcf"]
 CMD ["-h"]
 
-FROM debian:bullseye-slim as free5gc-udm
+FROM debian:bookworm-slim as free5gc-udm
 COPY --from=builder /go/src/free5gc/bin/udm /usr/local/bin/udm
 ENTRYPOINT ["udm"]
 CMD ["-h"]
 
-FROM debian:bullseye-slim as free5gc-udr
+FROM debian:bookworm-slim as free5gc-udr
 COPY --from=builder /go/src/free5gc/bin/udr /usr/local/bin/udr
 ENTRYPOINT ["udr"]
 CMD ["-h"]
 
-#FROM debian:bullseye-slim as free5gc-webui
+#FROM debian:bookworm-slim as free5gc-webui
 #COPY --from=builder /go/src/free5gc/webconsole/bin/webconsole /usr/local/bin/webconsole
 #RUN mkdir webconsole
 #COPY --from=builder /go/src/free5gc/webconsole/public webconsole/public
