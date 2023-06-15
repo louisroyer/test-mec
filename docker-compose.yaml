@@ -1,20 +1,24 @@
 x-define:
-  x-entrypoint-mec: &entrypoint-mec # TODO A dedicated image to do this lightfully
-    image: louisroyer/network-debug 
+  x-entrypoint-mec: &entrypoint-mec
+    image: louisroyer/docker-setup
     restart: "no" # oneshot
     cap_add:
       - NET_ADMIN
-    volumes:
-      - ./entrypoint-mec.sh:/usr/local/bin/entrypoint.sh:ro
-    entrypoint: entrypoint.sh
-  x-entrypoint-test-dn: &entrypoint-test-dn # TODO A dedicated image to do this lightfully
-    image: louisroyer/network-debug 
+    environment:
+      ONESHOT: "true"
+      ROUTES_INIT: |-
+        - add 10.0.222.0/24 via 10.0.223.2
+  x-entrypoint-test-dn: &entrypoint-test-dn
+    image: louisroyer/docker-setup
     restart: "no" # oneshot
     cap_add:
       - NET_ADMIN
-    volumes:
-      - ./entrypoint-test-dn.sh:/usr/local/bin/entrypoint.sh:ro
-    entrypoint: entrypoint.sh
+    environment:
+      ONESHOT: "true"
+      ROUTES_INIT: |-
+        - add 10.0.111.0/24 via 10.0.224.4
+        - add 10.0.222.0/24 via 10.0.224.2
+        - add 10.0.221.0/24 via 10.0.224.8
   x-nextmn-srv6-ctrl: &nextmn-srv6-ctrl
     restart: always
     build:
@@ -765,24 +769,27 @@ x-group:
       container_name: cp-st-router
       hostname: cp-st-router
       restart: always
-      build:
-        context: ./router
-      image: router
-      volumes:
-        - ./config/routing-cp-st-router.sh:/usr/local/bin/routing.sh:ro
+      image: louisroyer/docker-setup
       environment:
-        - ROUTING=routing.sh
+        ONESHOT: "false"
+        ROUTES_INIT: |-
+          - add 10.0.213.0/24 via 10.0.214.4
+        ROUTES_EXIT: |-
+          - del 10.0.213.0/24 via 10.0.214.4
       cap_add:
         - NET_ADMIN
       sysctls:
         - net.ipv4.ip_forward=1
-      init: true
       networks:
         tn-cp-st-net:
           ipv4_address: 10.0.214.2
           ipv6_address: fd00:d0cc:e700:1111:3::2
         n4-net:
           ipv4_address: 10.0.210.4
+    cp-st-router-debug:
+      <<: *debug-lvl2-common
+      container_name: cp-st-router-debug
+      network_mode: service:cp-st-router
     trunks-cp:
       init: true
       container_name: trunks-cp
