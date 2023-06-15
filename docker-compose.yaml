@@ -595,8 +595,6 @@ x-group:
       container_name: mongodb-f5gc
       hostname: mongodb-f5gc
       command: mongod --port 27017 --bind_ip_all
-      volumes:
-        - ./f5gc-dbdata:/data/db
       restart: always
       networks:
         db-net:
@@ -1033,7 +1031,6 @@ x-group:
       cap_add:
         - NET_ADMIN
       volumes:
-        - ./bind9-cache:/var/cache/bind
         - ./bind9/named.conf.local:/etc/bind/named.conf.local:ro
         - ./bind9/mno-named.conf.options:/etc/bind/named.conf.options:ro
         - ./bind9/test.db:/etc/bind/zones/test.db:ro
