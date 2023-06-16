@@ -22,10 +22,12 @@ TESTCASES := explicitaccess dnsredirect appredirect trafficsteering
 default: u
 # Start containers
 u:
-	$(DC) $(DEBUG) $(SOCKS) up -d
+	#$(DC) $(DEBUG) $(SOCKS) up -d
+	$(DC) $(DEBUG) up -d
 # Shutdown containers
 d:
-	$(DC) $(DEBUG) $(SOCKS) down
+	#$(DC) $(DEBUG) $(SOCKS) down
+	$(DC) $(DEBUG) up -d
 
 # Restart containers
 r: d u
