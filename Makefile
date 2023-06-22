@@ -27,7 +27,7 @@ u:
 # Shutdown containers
 d:
 	#$(DC) $(DEBUG) $(SOCKS) down
-	$(DC) $(DEBUG) up -d
+	$(DC) $(DEBUG) down
 
 # Restart containers
 r: d u
