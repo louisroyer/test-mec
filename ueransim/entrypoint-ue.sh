@@ -9,19 +9,8 @@ if [ -n "${SLEEP}" ]; then
 	echo "[$(date --iso-8601=s)] Starting in ${SLEEP} seconds" > /dev/stderr
 	sleep "${SLEEP}"
 fi
-# Starting
-nr-ue "$@" &
 
-# Waiting pdu session
-if [ -z "${ROUTING_SLEEP}" ]; then
-	ROUTING_SLEEP=2
-fi
-if [ -n "${ROUTING}" ]; then
-	until /usr/bin/env "${ROUTING}"
-	do
-		echo "[$(date --iso-8601=s)] Waiting creation of PDU session: Retrying in ${ROUTING_SLEEP} seconds">/dev/stderr
-		sleep "${ROUTING_SLEEP}"
-	done
-	echo "[$(date --iso-8601=s)] Route to Data Network created successfully"
-fi
+exec nr-ue -c "$UE_CONFIG_FILE" &
+
+
 sleep infinity

@@ -10,6 +10,7 @@ x-define:
 
   x-debug:
     x-debug-common: &debug-common
+      init: true
       image: louisroyer/network-debug
       cap_add:
         - NET_ADMIN
@@ -24,6 +25,7 @@ x-define:
         - debug-lvl2
   x-ue:
     x-ue-environment-common: &ue-environment-common
+      UE_CONFIG_FILE: /usr/local/config/my-custom-ue.yaml
       MCC: "001"
       MNC: "01"
       GNBS: |-
@@ -44,7 +46,16 @@ x-define:
             sst: 1
             sd: 0x010203
     x-ue-common: &ue-common
-      image: louisroyer/ueransim-ue
+      init: true
+      build:
+        context: ./ueransim
+        target : ueransim-ue
+        dockerfile: Dockerfile
+      volumes:
+        - ../local-ueransim/UERANSIM/build/nr-ue:/usr/local/bin/nr-ue:ro
+        - ../local-ueransim/UERANSIM/build/nr-cli:/usr/local/bin/nr-cli:ro
+        - ../local-ueransim/UERANSIM/config:/usr/local/config:ro
+      image: ueransim-ue
       cap_add:
         - NET_ADMIN
       devices:
@@ -56,6 +67,33 @@ x-define:
       command: [" "]
       networks:
         ran-net: # automatic allocation for UEs
+  x-gnb:
+    x-gnb-environment-common: &gnb-environment-common
+      MCC: "001"
+      MNC: "01"
+      NCI: "0x000000010"
+      ID_LEN: 32
+      TAC: 1
+      AMF_CONFIGS: |-
+        - address: 10.0.202.3
+          port: 38412
+    x-gnb-common: &gnb-common
+      init: true
+      build:
+        context: ./ueransim
+        target : ueransim-gnb
+        dockerfile: Dockerfile
+      volumes:
+        - ../local-ueransim/UERANSIM/build/nr-gnb:/usr/local/bin/nr-gnb:ro
+        - ../local-ueransim/UERANSIM/build/nr-cli:/usr/local/bin/nr-cli:ro
+        - ../local-ueransim/UERANSIM/config:/usr/local/config:ro
+
+      image: ueransim-gnb
+      cap_add:
+        - NET_ADMIN
+      sysctls:
+        - net.ipv6.conf.all.disable_ipv6=0
+      command: [" "]
 
 x-group:
   x-group-ue: &group-ue # ue1 + debug
@@ -63,6 +101,9 @@ x-group:
       <<: *ue-common
       container_name: ue1
       hostname: ue1
+      depends_on:
+        - gnb1
+        - gnb2
       environment:
         <<: *ue-environment-sliceA
         MSISDN: "0000000001"
@@ -72,45 +113,25 @@ x-group:
       network_mode: service:ue1
   x-group-gnb: &group-gnb # gnb1
     gnb1:
+      <<: *gnb-common
       container_name: gnb1
       hostname: gnb1
       depends_on:
         - upf1
         - amf1
-      build:
-        context: ./ueransim
-        target: ueransim-gnb
-        args:
-          IPERF2_RELEASE: 2-1-4
-      image: ueransim-gnb
-      volumes:
-        - ./config/templates/config-gnb.yaml:/etc/ueransim/config-template.yaml:ro
-        - ./config/templates/scripts/config-gnb.sh:/usr/local/bin/config.sh:ro
-        - ./config/routing-gnb.sh:/usr/local/bin/routing.sh:ro
-      command: -c /etc/ueransim/config.yaml
-      cap_add:
-        - NET_ADMIN
-      sysctls:
-        - net.ipv6.conf.all.disable_ipv6=0
       environment:
-        - ROUTING=routing.sh
-        - CONFIG_SCRIPT=config.sh
-        - TEMPLATE=/etc/ueransim/config-template.yaml
-        - CONFIG_FILE=/etc/ueransim/config.yaml
-        - MCC=001
-        - MNC=01
-        - NCI=0x000000010
-        - LINK_IP=fd00:d0cc:e700:1111:1:8000:0:2
-          #- LINK_IP=10.0.200.130
-        - NGAP_IP=10.0.202.2
-          #- NGAP_IP=fd00:d0cc:e700:1111:2:8000:0:2
-        - GTP_IP=10.0.203.3
-          #- GTP_IP=fd00:d0cc:e700:1111:3:8000:0:3
-        - AMF_IP=10.0.202.3
-          #- AMF_IP=fd00:d0cc:e700:1111:2:8000:0:3
-        - SST_LIST=1
-        - SD_LIST=0x010203
-        - TAC=1
+        <<: *gnb-environment-common
+        GNB_CONFIG_FILE: "/usr/local/config/my-custom-gnb1.yaml"
+        RLS_IP: "fd00:d0cc:e700:1111:1:8000:0:2"
+          #RLS_IP: "10.0.200.130"
+        N2_IP: "10.0.202.2"
+          #N2_IP: "fd00:d0cc:e700:1111:2:8000:0:2"
+        N3_IP: "10.0.203.3"
+            #N3_IP: "fd00:d0cc:e700:1111:3:8000:0:3"
+        SUPPORTED_NSSAIS: |-
+          - sst: 1
+            sd: 0x010203
+   
       networks:
         ran-net:
           ipv4_address: 10.0.200.130
@@ -121,6 +142,35 @@ x-group:
         n3-net:
           ipv4_address: 10.0.203.3
           ipv6_address: fd00:d0cc:e700:1111:3:8000:0:3
+    gnb2:
+      <<: *gnb-common
+      container_name: gnb2
+      hostname: gnb2
+      depends_on:
+        - upf1
+        - amf1
+      environment:
+        <<: *gnb-environment-common
+        GNB_CONFIG_FILE: "/usr/local/config/my-custom-gnb2.yaml"
+        RLS_IP: "fd00:d0cc:e700:1111:1:8000:0:3"
+          #RLS_IP: "10.0.200.131"
+        N2_IP: "10.0.202.4"
+          #N2_IP: "fd00:d0cc:e700:1111:2:8000:0:2"
+        N3_IP: "10.0.203.4"
+            #N3_IP: "fd00:d0cc:e700:1111:3:8000:0:3"
+        SUPPORTED_NSSAIS: |-
+          - sst: 1
+            sd: 0x010203        
+      networks:
+        ran-net:
+          ipv4_address: 10.0.200.131
+          ipv6_address: fd00:d0cc:e700:1111:1:8000:0:3
+        n2-net:
+          ipv4_address: 10.0.202.4
+          ipv6_address: fd00:d0cc:e700:1111:2:8000:0:4
+        n3-net:
+          ipv4_address: 10.0.203.4
+          ipv6_address: fd00:d0cc:e700:1111:3:8000:0:4
   x-group-upf-a: &group-upf-a # upf1
     upf1:
       container_name: upf1
@@ -156,6 +206,7 @@ x-group:
           ipv4_address: 10.0.224.2
   x-group-core-network-aux-nf: &group-core-network-aux-nf # f5gc-populate, nrf, mongodb, ausf, nssf, udm, upr, pcf
     free5gc-populate:
+      init: true
       container_name: free5gc-populate
       hostname: free5gc-populate
       depends_on:
