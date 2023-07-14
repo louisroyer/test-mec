@@ -10,7 +10,9 @@ if [ -n "${SLEEP}" ]; then
 	sleep "${SLEEP}"
 fi
 
-exec nr-ue -c "$UE_CONFIG_FILE" &
+# Routing
+if [ -n "${ROUTING}" ]; then
+	"${ROUTING}" &
+fi
 
-
-sleep infinity
+exec nr-ue -c "$UE_CONFIG_FILE"

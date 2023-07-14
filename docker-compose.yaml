@@ -26,6 +26,7 @@ x-define:
   x-ue:
     x-ue-environment-common: &ue-environment-common
       UE_CONFIG_FILE: /usr/local/config/my-custom-ue.yaml
+      ROUTING: "routing.sh"
       MCC: "001"
       MNC: "01"
       GNBS: |-
@@ -55,6 +56,7 @@ x-define:
         - ../local-ueransim/UERANSIM/build/nr-ue:/usr/local/bin/nr-ue:ro
         - ../local-ueransim/UERANSIM/build/nr-cli:/usr/local/bin/nr-cli:ro
         - ../local-ueransim/UERANSIM/config:/usr/local/config:ro
+        - ./config/routing-ue.sh:/usr/local/bin/routing.sh:ro
       image: ueransim-ue
       cap_add:
         - NET_ADMIN
@@ -131,7 +133,6 @@ x-group:
         SUPPORTED_NSSAIS: |-
           - sst: 1
             sd: 0x010203
-   
       networks:
         ran-net:
           ipv4_address: 10.0.200.130
@@ -142,6 +143,10 @@ x-group:
         n3-net:
           ipv4_address: 10.0.203.3
           ipv6_address: fd00:d0cc:e700:1111:3:8000:0:3
+    gnb1-debug:
+      <<: *debug-common
+      container_name: gnb1-debug
+      network_mode: service:gnb1
     gnb2:
       <<: *gnb-common
       container_name: gnb2
@@ -171,6 +176,10 @@ x-group:
         n3-net:
           ipv4_address: 10.0.203.4
           ipv6_address: fd00:d0cc:e700:1111:3:8000:0:4
+    gnb2-debug:
+      <<: *debug-common
+      container_name: gnb2-debug
+      network_mode: service:gnb2
   x-group-upf-a: &group-upf-a # upf1
     upf1:
       container_name: upf1
