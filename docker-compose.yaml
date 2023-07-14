@@ -53,10 +53,10 @@ x-define:
         target : ueransim-ue
         dockerfile: Dockerfile
       volumes:
-        - ../local-ueransim/UERANSIM/build/nr-ue:/usr/local/bin/nr-ue:ro
-        - ../local-ueransim/UERANSIM/build/nr-cli:/usr/local/bin/nr-cli:ro
-        - ../local-ueransim/UERANSIM/config:/usr/local/config:ro
         - ./config/routing-ue.sh:/usr/local/bin/routing.sh:ro
+        - ../UERANSIM/build/nr-ue:/usr/local/bin/nr-ue:ro
+        - ../UERANSIM/build/nr-cli:/usr/local/bin/nr-cli:ro
+        - ../UERANSIM/config:/usr/local/config:ro
       image: ueransim-ue
       cap_add:
         - NET_ADMIN
@@ -86,9 +86,9 @@ x-define:
         target : ueransim-gnb
         dockerfile: Dockerfile
       volumes:
-        - ../local-ueransim/UERANSIM/build/nr-gnb:/usr/local/bin/nr-gnb:ro
-        - ../local-ueransim/UERANSIM/build/nr-cli:/usr/local/bin/nr-cli:ro
-        - ../local-ueransim/UERANSIM/config:/usr/local/config:ro
+        - ../UERANSIM/build/nr-gnb:/usr/local/bin/nr-gnb:ro
+        - ../UERANSIM/build/nr-cli:/usr/local/bin/nr-cli:ro
+        - ../UERANSIM/config:/usr/local/config:ro
 
       image: ueransim-gnb
       cap_add:

@@ -1,6 +1,6 @@
 
 ### UERANSIM-GNB ###
-FROM ubuntu:22.04  AS ueransim-gnb
+FROM debian:bookworm-slim  AS ueransim-gnb
 RUN apt-get update -q && DEBIAN_FRONTEND=non-interactive apt-get install -qy --no-install-recommends --no-install-suggests \
     lksctp-tools iproute2 ethtool \
     iputils-ping \
@@ -12,7 +12,7 @@ ENTRYPOINT ["entrypoint.sh"]
 CMD ["--help"]
 
 ### UERANSIM-UE ###
-FROM ubuntu:22.04 AS ueransim-ue
+FROM debian:bookworm-slim AS ueransim-ue
 RUN apt-get update -q && DEBIAN_FRONTEND=non-interactive apt-get install -qy --no-install-recommends --no-install-suggests \
     lksctp-tools \
     iproute2 iputils-ping wget bind9-dnsutils\
