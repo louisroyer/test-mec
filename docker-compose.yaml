@@ -556,19 +556,36 @@ x-group:
           ipv4_address: 10.0.216.4
   x-group-core-network-aux-nf: &group-core-network-aux-nf # f5gc-populate, nrf, mongodb, ausf, nssf, udm, upr, pcf
     free5gc-populate:
-      restart: "no" # oneshot
+      image: louisroyer/free5gc-populate
       container_name: free5gc-populate
       hostname: free5gc-populate
+      restart: "no" # oneshot
       depends_on:
         - mongodb-f5gc
-      build:
-        context: ./free5gc-populate
-        args:
-          F5GCPOPULATE_RELEASE: 3f4c8b1
-      volumes:
-        - ./config/populate-config.yaml:/etc/free5gc-populate/config.yaml:ro
-      command: --config /etc/free5gc-populate/config.yaml
-      image: free5gc-populate
+      command: [" "]
+      environment:
+        MONGO_HOST: "mongodb-f5gc.db-net"
+        SLICES: |-
+          - sst: 01
+            sd: 010203
+            varqi: 9
+            dnn: sliceA
+          - sst: 01
+            sd: 112233
+            varqi: 9
+            dnn: sliceB
+          - sst: 01
+            sd: 012345
+            varqi: 9
+            dnn: sliceC
+        IMSI: |-
+          - imsi-001010000000001
+          - imsi-001010000000002
+          - imsi-001010000000003
+          - imsi-001010000000004
+          - imsi-001010000000005
+          - imsi-001010000000006
+          - imsi-001010000000011
       networks:
         db-net:
     nrf:
