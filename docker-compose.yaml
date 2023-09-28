@@ -52,7 +52,6 @@ x-define:
         - NET_ADMIN
       profiles:
         - debug
-      init: true
   x-debug-ue: &debug-ue
     <<: *debug-common
 
@@ -63,7 +62,6 @@ x-define:
         - NET_ADMIN
       profiles:
         - debug-lvl2
-      init: true
   x-socks: &socks
     image: microsocks
     build:
