@@ -113,7 +113,7 @@ x-group:
       <<: *debug-common
       container_name: ue1-debug
       network_mode: service:ue1
-  x-group-gnb: &group-gnb # gnb1
+  x-group-gnb: &group-gnb # gnb1 + gnb2 + debug
     gnb1:
       <<: *gnb-common
       container_name: gnb1
