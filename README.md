@@ -38,7 +38,7 @@ Some Docker Images are weekly updated on [DockerHub](https://hub.docker.com/sear
 The above command will download images online and build the missing ones from Dockerfile hosted on this repository. To use your own images (for example a debug image with more tools), replace it in `docker-compose.yaml`. 
 
 ## Architecture (branch stage-ueransim only)
-![Architecture](./images/stage-ueransim-architecture.svg)
+![Architecture](./images/archi-5g-for-n2-handover.svg)
 
 ## License
 - Dockerfiles, configuration, scripts, documentation, and in a general fashion all files directly hosted in this git repository are under MIT license.
