@@ -19,152 +19,144 @@ configuration:
   snssaiInfos:
     - sNssai:
         sst: 1
-        sd: 012345
+        sd: 3
       dnnInfos:
-        - dnn: sliceC
+        - dnn: srv6
           dns: 
             ipv4: 9.9.9.9
             ipv6: 2001:4860:4860::8888
-    - sNssai:
-        sst: 1
-        sd: 010203
-      dnnInfos:
-        - dnn: sliceA
-          dns: 
-            ipv4: 10.0.224.3
-            ipv6: 2001:4860:4860::8888
-    - sNssai:
-        sst: 1
-        sd: 112233
-      dnnInfos:
-        - dnn: sliceB
-          dns: 
-            ipv4: 9.9.9.9
-            ipv6: 2001:4860:4860::8888
+#    - sNssai:
+#        sst: 1
+#        sd: 010203
+#      dnnInfos:
+#        - dnn: sliceA
+#          dns: 
+#            ipv4: 10.0.224.3
+#            ipv6: 2001:4860:4860::8888
+#    - sNssai:
+#        sst: 1
+#        sd: 112233
+#      dnnInfos:
+#        - dnn: sliceB
+#          dns: 
+#            ipv4: 9.9.9.9
+#            ipv6: 2001:4860:4860::8888
   plmnList:
     - mcc: "001"
       mnc: "01"
 
   pfcp:
-    addr: 10.0.210.2
+    addr: 10.0.210.2 #TODO: change me
   userplaneInformation:
     upNodes:
-      ran-area1-3:
+      ran-srv6:
         type: AN
 
-      ran-area1-1:
-        type: AN
+#      ran-area1-1:
+#        type: AN
+#
+#      ran-area1-2:
+#        type: AN
 
-      ran-area1-2:
-        type: AN
-
-      upf-sliceC:
+      upf-srv6:
         type: UPF
-        nodeID: 10.0.210.6
+        nodeID: 10.0.210.6 # change me
         sNssaiUpfInfos:
           - sNssai:
               sst: 1
-              sd: 012345
+              sd: 000003
             dnnUpfInfoList:
-              - dnn: sliceC
+              - dnn: srv6 
                 pools:
-                  - cidr: 10.0.221.0/24
+                  - cidr: 10.0.221.0/24 # change me
         interfaces:
           - interfaceType: N3
             endpoints:
-              - "10.0.201.7" # H.M.GTP4.D instance
-            networkInstance: sliceC
+              - "10.0.201.7" # H.M.GTP4.D instance # change me
+            networkInstance: srv6
 
-      upf-mec-area1:
-        type: UPF
-        nodeID: 10.0.213.3
-        sNssaiUpfInfos:
-          - sNssai:
-              sst: 1
-              sd: 010203
-            dnnUpfInfoList:
-              - dnn: sliceA
-        interfaces:
-          - interfaceType: N3
-            endpoints:
-              #- fd00:d0cc:e700:1111:4::3
-              - 10.0.201.3
-            networkInstance: sliceA
-          - interfaceType: N9
-            endpoints:
-              - 10.0.215.2
-            networkInstance: sliceA
-
-
-      upf-sliceA:
-        type: UPF
-        nodeID: 10.0.210.3
-        sNssaiUpfInfos:
-          - sNssai:
-              sst: 1
-              sd: 010203
-            dnnUpfInfoList:
-              - dnn: sliceA
-                pools:
-                  - cidr: 10.0.222.0/24
-        interfaces:
-          - interfaceType: N9
-            endpoints:
-              - 10.0.216.2
-            networkInstance: sliceA
-
-      upf-mec-area2:
-        type: UPF
-        nodeID: 10.0.213.6
-        sNssaiUpfInfos:
-          - sNssai:
-              sst: 1
-              sd: 112233
-            dnnUpfInfoList:
-              - dnn: sliceB
-        interfaces:
-          - interfaceType: N3
-            endpoints:
-              #- fd00:d0cc:e700:1111:4::5
-              - 10.0.201.5
-            networkInstance: sliceB
-          - interfaceType: N9
-            endpoints:
-              - 10.0.215.4
-            networkInstance: sliceB
-
-
-      upf-sliceB:
-        type: UPF
-        nodeID: 10.0.210.5
-        sNssaiUpfInfos:
-          - sNssai:
-              sst: 1
-              sd: 112233
-            dnnUpfInfoList:
-              - dnn: sliceB
-                pools:
-                  - cidr: 10.0.111.0/24
-        interfaces:
-          - interfaceType: N9
-            endpoints:
-              - 10.0.216.4
-            networkInstance: sliceB
+#      upf-mec-area1:
+#        type: UPF
+#        nodeID: 10.0.213.3
+#        sNssaiUpfInfos:
+#          - sNssai:
+#              sst: 1
+#              sd: 010203
+#            dnnUpfInfoList:
+#              - dnn: sliceA
+#        interfaces:
+#          - interfaceType: N3
+#            endpoints:
+#              #- fd00:d0cc:e700:1111:4::3
+#              - 10.0.201.3
+#            networkInstance: sliceA
+#          - interfaceType: N9
+#            endpoints:
+#              - 10.0.215.2
+#            networkInstance: sliceA
+#
+#
+#      upf-sliceA:
+#        type: UPF
+#        nodeID: 10.0.210.3
+#        sNssaiUpfInfos:
+#          - sNssai:
+#              sst: 1
+#              sd: 010203
+#            dnnUpfInfoList:
+#              - dnn: sliceA
+#                pools:
+#                  - cidr: 10.0.222.0/24
+#        interfaces:
+#          - interfaceType: N9
+#            endpoints:
+#              - 10.0.216.2
+#            networkInstance: sliceA
+#
+#      upf-mec-area2:
+#        type: UPF
+#        nodeID: 10.0.213.6
+#        sNssaiUpfInfos:
+#          - sNssai:
+#              sst: 1
+#              sd: 112233
+#            dnnUpfInfoList:
+#              - dnn: sliceB
+#        interfaces:
+#          - interfaceType: N3
+#            endpoints:
+#              #- fd00:d0cc:e700:1111:4::5
+#              - 10.0.201.5
+#            networkInstance: sliceB
+#          - interfaceType: N9
+#            endpoints:
+#              - 10.0.215.4
+#            networkInstance: sliceB
+#
+#
+#      upf-sliceB:
+#        type: UPF
+#        nodeID: 10.0.210.5
+#        sNssaiUpfInfos:
+#          - sNssai:
+#              sst: 1
+#              sd: 112233
+#            dnnUpfInfoList:
+#              - dnn: sliceB
+#                pools:
+#                  - cidr: 10.0.111.0/24
+#        interfaces:
+#          - interfaceType: N9
+#            endpoints:
+#              - 10.0.216.4
+#            networkInstance: sliceB
 
 
     links:
-      - A: ran-area1-3
-        B: upf-sliceC
-      - A: ran-area1-1
-        B: upf-mec-area1
-      - A: upf-mec-area1
-        B: upf-sliceA
-      - A: ran-area1-2
-        B: upf-mec-area2
-      - A: upf-mec-area2
-        B: upf-sliceB
+      - A: ran-srv6
+        B: upf-srv6
 
-  nrfUri: http://nrf.sbi-net:8000 
+  nrfUri: http://nrf.sbi:8000 
     #  locality: loc1
   ulcl: true
 
