@@ -97,8 +97,7 @@ x-f5gc: &f5gc
     environment:
       MONGO_HOST: "mongodb-f5gc.db"
       SLICES: |-
-      {% for slice in slices -%}
-        - sst: {{ slices[slice].nssai.sst }}
+        {% for slice in slices %}- sst: {{ slices[slice].nssai.sst }}
           sd: {{ '%06X' | format(slices[slice].nssai.sd) }}
           varqi: 9
           dnn: {{slice}}
@@ -106,7 +105,7 @@ x-f5gc: &f5gc
       IMSI: |-
       {%- set ue = namespace(id=1) -%}
       {%for slice in slices %}
-        - imsi-00101{{"%10d" | format(ue.id) }}
+        - imsi-00101{{"%010d" | format(ue.id) }}
       {%- set ue.id = ue.id + 1 -%}
       {% endfor %}
     networks:
@@ -121,73 +120,73 @@ x-f5gc: &f5gc
       db:
 
 # TODO: SMF paramétrable
-    smf:
-      container_name: smf
-      hostname: smf
-      restart: always
-      depends_on:
-        - nrf
-      build:
-        context: ./free5gc
-        target: free5gc-smf
-        args:
-          F5GC_RELEASE: v3.2.0
-      image: free5gc-smf
-      volumes:
-        - ./config/smf-config.yaml:/etc/smf/smf-config.yaml:ro
-        - ./config/ue-routing.yaml:/etc/smf/ue-routing.yaml:ro
-      cap_add:
-        - NET_ADMIN
-      command: --config /etc/smf/smf-config.yaml --uerouting /etc/smf/ue-routing.yaml
-      networks:
-        n4:
-          ipv4_address: {{ "10.0.%d.1" | format(networks.n4.subnet_id) }}
-        sbi:
-          ipv4_address: {{ "10.0.%d.1" | format(networks.sbi.subnet_id) }}
+  smf:
+    container_name: smf
+    hostname: smf
+    restart: always
+    depends_on:
+      - nrf
+    build:
+      context: ./free5gc
+      target: free5gc-smf
+      args:
+        F5GC_RELEASE: v3.2.0
+    image: free5gc-smf
+    volumes:
+      - ./config/smf-config.yaml:/etc/smf/smf-config.yaml:ro
+      - ./config/ue-routing.yaml:/etc/smf/ue-routing.yaml:ro
+    cap_add:
+      - NET_ADMIN
+    command: --config /etc/smf/smf-config.yaml --uerouting /etc/smf/ue-routing.yaml
+    networks:
+      n4:
+        ipv4_address: {{ "10.0.%d.1" | format(networks.n4.subnet_id) }}
+      sbi:
+        ipv4_address: {{ "10.0.%d.1" | format(networks.sbi.subnet_id) }}
 
 # TODO: AMF paramétrable
-    amf:
-      container_name: amf
-      hostname: amf
-      restart: always
-      depends_on:
-        - nrf
-      build:
-        context: ./free5gc
-        target: free5gc-amf
-        args:
-          F5GC_RELEASE: v3.2.0
-      image: free5gc-amf
-      volumes:
-        - ./config/templates/config-amf.yaml:/etc/amf/config-template.yaml:ro
-        - ./config/templates/scripts/config-amf.sh:/usr/local/bin/config.sh:ro
-      command: --config /etc/amf/config.yaml
-      cap_add:
-        - NET_ADMIN
-      sysctls:
-        - net.ipv6.conf.all.disable_ipv6=0
-      environment:
-        TEMPLATE: "/etc/amf/config-template.yaml"
-        CONFIG_FILE: "/etc/amf/config.yaml"
-        CONFIG_SCRIPT: "config.sh"
-        NGAP_IP: "{{ "10.0.%d.%d" | format(networks.n2.subnet_id, 129+1) }}"
-        SBI_REGISTER_IP: "amf.sbi"
-        SBI_BINDING_IP: "{{ "10.0.%d.%d" | format(networks.sbi.subnet_id, 129+2) }}"
-        MCC: "001"
-        MNC: "01"
-        AMF_ID: "000001"
-        AMF_NAME: "AMF1"
-        NRF_URI: "http://nrf.sbi-net:8000"
-        DNN_LIST: "{% for slice in slices %}{{ slice }}{% if not loop.last %} {% endif %}{% endfor %}"
-        SST_LIST: "{% for slice in slices %}{{ "%d" | format(slices[slice].nssai.sst) }}{% if not loop.last %} {% endif %}{% endfor %}"
-        SD_LIST: "{% for slice in slices %}{{ "%06x" | format(slices[slice].nssai.sd) }}{% if not loop.last %} {% endif %}{% endfor %}"
-        TAC: "1"
-        LOCALITY: "loc1"
-      networks:
-        sbi:
-          ipv4_address: {{ "10.0.%d.%d" | format(networks.sbi.subnet_id, 129+2) }}
-        n2:
-          ipv4_address: {{ "10.0.%d.%d" | format(networks.n2.subnet_id, 129+1) }}
+  amf:
+    container_name: amf
+    hostname: amf
+    restart: always
+    depends_on:
+      - nrf
+    build:
+      context: ./free5gc
+      target: free5gc-amf
+      args:
+        F5GC_RELEASE: v3.2.0
+    image: free5gc-amf
+    volumes:
+      - ./config/templates/config-amf.yaml:/etc/amf/config-template.yaml:ro
+      - ./config/templates/scripts/config-amf.sh:/usr/local/bin/config.sh:ro
+    command: --config /etc/amf/config.yaml
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+    environment:
+      TEMPLATE: "/etc/amf/config-template.yaml"
+      CONFIG_FILE: "/etc/amf/config.yaml"
+      CONFIG_SCRIPT: "config.sh"
+      NGAP_IP: "{{ "10.0.%d.%d" | format(networks.n2.subnet_id, 129+1) }}"
+      SBI_REGISTER_IP: "amf.sbi"
+      SBI_BINDING_IP: "{{ "10.0.%d.%d" | format(networks.sbi.subnet_id, 129+2) }}"
+      MCC: "001"
+      MNC: "01"
+      AMF_ID: "000001"
+      AMF_NAME: "AMF1"
+      NRF_URI: "http://nrf.sbi-net:8000"
+      DNN_LIST: "{% for slice in slices %}{{ slice }}{% if not loop.last %} {% endif %}{% endfor %}"
+      SST_LIST: "{% for slice in slices %}{{ "%d" | format(slices[slice].nssai.sst) }}{% if not loop.last %} {% endif %}{% endfor %}"
+      SD_LIST: "{% for slice in slices %}{{ "%06x" | format(slices[slice].nssai.sd) }}{% if not loop.last %} {% endif %}{% endfor %}"
+      TAC: "1"
+      LOCALITY: "loc1"
+    networks:
+      sbi:
+        ipv4_address: {{ "10.0.%d.%d" | format(networks.sbi.subnet_id, 129+2) }}
+      n2:
+        ipv4_address: {{ "10.0.%d.%d" | format(networks.n2.subnet_id, 129+1) }}
 
   {% for nf in ["nrf", "ausf", "n3iwf", "nssf", "pcf", "udm", "udr"] -%}
   {{ nf }}:
@@ -216,11 +215,11 @@ x-f5gc: &f5gc
       {% endif -%}
       BINDING_IP: {{ "10.0.%d.%d" | format(networks.sbi.subnet_id, 129+loop.index+2) }}
       REGISTER_IP: {{ nf }}.sbi
-      {% if nf == "nssf" -%}
+      {%- if nf == "nssf" %}
       SUPPORTED_NSSAIS: |-
         {%for slice in slices %}- sst: {{ slices[slice].nssai.sst }}
-          sd: {{ '%06X' | format(slices[slice].nssai.sd) }}{% endfor %}
-      {% endif -%}
+          sd: {{ '%06X' | format(slices[slice].nssai.sd) }}{% endfor -%}
+      {% endif %}
     volumes:
         - ./config/templates/config-{{ nf }}.yaml:/etc/{{ nf }}/config-template.yaml:ro
         - ./config/templates/scripts/config-{{ nf }}.sh:/usr/local/bin/config.sh:ro
@@ -278,17 +277,24 @@ x-gnb: &gnb
       SUPPORTED_NSSAIS: |-
         - sst: {{ slices[slice].nssai.sst }}
           sd: {{ "%06X" | format(slices[slice].nssai.sd) }}
-      networks:
-        ran:
-          ipv4_address: {{ "10.0.%d.%d" | format(networks.ran.subnet_id, 129 + loop.index) }}
-          ipv6_address: {{ "fd00:0:0:0:%x:8000:0:%4x" | format(networks.ran.subnet_id, loop.index) }}
-        n2:
-          ipv4_address: {{ "10.0.%d.%d" | format(networks.n2.subnet_id, 129 + loop.index + 1) }}
-        dataplane:
-          ipv4_address: {{ "10.0.%d.%d" | format(networks.dataplane.subnet_id, 129 + loop.index + 1) }}
+    networks:
+      ran:
+        ipv4_address: {{ "10.0.%d.%d" | format(networks.ran.subnet_id, 129 + loop.index) }}
+        ipv6_address: {{ "fd00:0:0:0:%x:8000:0:%x" | format(networks.ran.subnet_id, loop.index) }}
+      n2:
+        ipv4_address: {{ "10.0.%d.%d" | format(networks.n2.subnet_id, 129 + loop.index + 1) }}
+      dataplane:
+        ipv4_address: {{ "10.0.%d.%d" | format(networks.dataplane.subnet_id, 129 + loop.index + 1) }}
   {% endfor %}
 
 # USER EQUIPMENTS CONFIG
+x-socks: &socks
+  image: microsocks
+  build:
+    context: ./microsocks
+  profiles:
+      - socks
+
 x-ue-environment-common: &ue-environment-common
   MCC: "001"
   MNC: "01"
@@ -297,8 +303,8 @@ x-ue-environment-common: &ue-environment-common
 x-ue-environment-slice-{{ slice }}: &ue-environment-slice-{{ slice }}
   <<: *ue-environment-common
   GNBS: |-
-  #- "10.0.200.{{ '%d' | format(129 + loop.index) }}"
-  - "fd00:d0cc:e700:1111:1:8000:0:{{ '%04x' | format(1 + loop.index) }}"
+    #- "{{ "10.0.%d.%d" | format(networks.ran.subnet_id, 129 + loop.index) }}"
+    - "{{ "fd00:0:0:0:%x:8000:0:%x" | format(networks.ran.subnet_id, loop.index) }}"
   CONFIGURED_NSSAI: |-
     - sst: {{ slices[slice].nssai.sst }}
       sd: {{ '%06X' | format(slices[slice].nssai.sd) }}
@@ -325,7 +331,7 @@ x-ue-common: &ue-common
     - {{ services.dns.service_id }}
   command: [" "]
   networks:
-    ran-net: # automatic allocation for UEs
+    ran: # automatic allocation for UEs
 
 x-ue: &user-equipments
   # USER EQUIPMENTS
@@ -345,7 +351,6 @@ x-ue: &user-equipments
   {% endfor %}
 {% endfor %}
 
-
 x-data-networks: &data-networks
   # DATA NETWORKS SERVICES
   {%- for service in services %}
@@ -353,7 +358,7 @@ x-data-networks: &data-networks
   {{ "%s-%s" | format(service, edge.dnn) | with_debug | indent(2) }}
     container_name: {{ service }}-{{ edge.dnn }}
     hostname: {{ service }}-{{ edge.dnn }}
-    {%- if services[service].type == "nginx" -%}
+    {% if services[service].type == "nginx" -%}
     image: nginx
     volumes:
       - ./nginx/templates:/etc/nginx/templates:ro
@@ -389,16 +394,13 @@ x-data-networks: &data-networks
   {% endfor %}
 
 services:
-  <<: *data-networks
-  <<: *user-equipments
-  <<: *gnb
-  <<: *f5gc
+  <<: [*data-networks, *user-equipments, *gnb, *f5gc]
 
 #  <<: [*group-ue, *group-gnb, *group-upf-i, *group-upf-a, *group-core-network-main-nf, *group-core-network-aux-nf, *group-mec-dn, *group-internet-dn, *group-trunks, *group-nextmn-srv6]
 
 
 networks:
-  {%- for net in networks -%}
+  {% for net in networks -%}
   {{ '{
        "name": "%s",
        "ipv4_prefix": "10.0.%d.0/24",
