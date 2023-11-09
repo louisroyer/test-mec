@@ -3,11 +3,11 @@ info:
   description: SMF initial local configuration
 
 configuration:
-  smfName: SMF1
+  smfName: SMF
   sbi:
     scheme: http
-    registerIPv4: smf1.sbi-net # IP used to register to NRF
-    bindingIPv4: 10.0.211.3  # IP used to bind the service
+    registerIPv4: smf.sbi # IP used to register to NRF
+    bindingIPv4: 10.0.5.130  # IP used to bind the service
     port: 8000
     tls:
       key: config/TLS/smf.key
@@ -158,7 +158,7 @@ configuration:
 
   nrfUri: http://nrf.sbi:8000 
     #  locality: loc1
-  ulcl: true
+  ulcl: false # FIXME (pour ne pas oublier de le remettre
 
 logger:
   SMF:
