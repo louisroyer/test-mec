@@ -3,13 +3,13 @@ info:
   description: NRF initial local configuration
 
 configuration:
-  MongoDBName: free5gc # database name in MongoDB
-  MongoDBUrl: mongodb://mongodb-f5gc.db-net:27017 # a valid URL of the mongodb
+  MongoDBName: %MONGO_NAME # database name in MongoDB
+  MongoDBUrl: mongodb://%MONGO_HOST:%MONGO_PORT # a valid URL of the mongodb
   sbi: # Service-based interface information
     scheme: http # the protocol for sbi (http or https)
-    registerIPv4: nrf.sbi-net # IP used to serve NFs or register to another NRF
-    bindingIPv4: 10.0.211.2  # IP used to bind the service
-    port: 8000 # port used to bind the service
+    registerIPv4: %REGISTER_IP # IP used to serve NFs or register to another NRF
+    bindingIPv4: %BINDING_IP  # IP used to bind the service
+    port: %BINDING_PORT # port used to bind the service
     tls:
       pem: config/TLS/nrf.pem
       key: config/TLS/nrf.key

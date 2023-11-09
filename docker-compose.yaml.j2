@@ -1,0 +1,408 @@
+# DEBUG
+x-debug-common: &debug-common
+  image: louisroyer/network-debug
+  cap_add:
+    - NET_ADMIN
+  profiles:
+    - debug
+
+x-debug-hidden-common: &debug-hidden-common
+  image: louisroyer/network-debug
+  cap_add:
+    - NET_ADMIN
+  profiles:
+    - debug-hidden
+
+x-nextmn-srv6: &nextmn-srv6
+  restart: always
+  build:
+    context: ./nextmn-srv6
+    args:
+      NEXTMNSR_RELEASE: v0.0.5
+  image: nextmn-srv6
+  cap_add:
+    - NET_ADMIN
+  sysctls:
+    - net.ipv6.conf.all.disable_ipv6=0
+    - net.ipv4.ip_forward=1
+    - net.ipv6.conf.all.forwarding=1
+    - net.ipv6.conf.all.seg6_enabled=1
+    - net.ipv6.conf.default.seg6_enabled=1
+  command: ["-c", "/etc/nextmn-srv6/config.yaml"]
+  devices:
+    - "/dev/net/tun:/dev/net/tun"
+
+
+x-nextmn-srv6-ctrl: &nextmn-srv6-ctrl
+  restart: always
+  build:
+    context: ./nextmn-srv6-ctrl
+    args:
+      NEXTMNSRCTRL_RELEASE: v0.0.1
+  image: nextmn-srv6-ctrl
+  command: ["-c", "/etc/nextmn-srv6-ctrl/config.yaml"]
+
+x-srv6:
+  {{ "nextmn-srv6-ctrl" | with_debug | indent(2)}}
+    <<: *nextmn-srv6-ctrl
+    container_name: nextmn-srv6-ctrl
+    hostname: nextmn-srv6-ctrl
+    volumes:
+      - ./config/nextmn-srv6-ctrl.yaml:/etc/nextmn-srv6-ctrl/config.yaml
+    networks:
+      n4-net:
+        ipv4_address: 10.0.210.6
+
+  {{ "nextmn-srv6-dn" | with_debug | indent(2)}}
+    <<: *nextmn-srv6
+    container_name: nextmn-srv6-dn
+    hostname: nextmn-srv6-dn
+    volumes:
+      - ./config/nextmn-srv6-pre-init-hook.sh:/usr/local/bin/pre-init-hook.sh:ro
+      - ./config/nextmn-srv6-ipv4-post-init-hook.sh:/usr/local/bin/post-init-hook.sh:ro
+      - ./config/nextmn-srv6-ipv4.yaml:/etc/nextmn-srv6/config.yaml
+    networks:
+      srv6-net:
+        ipv4_address: 10.0.219.3
+        ipv6_address: fd00:d0cc:e700:3333:1::3
+      test-net:
+        ipv4_address: 10.0.224.8
+    
+  {{ "nextmn-srv6-gtp" | with_debug | indent(2)}}
+    <<: *nextmn-srv6
+    container_name: nextmn-srv6-gtp
+    hostname: nextmn-srv6-gtp
+    volumes:
+      - ./config/nextmn-srv6-pre-init-hook.sh:/usr/local/bin/pre-init-hook.sh:ro
+      - ./config/nextmn-srv6-gtp-post-init-hook.sh:/usr/local/bin/post-init-hook.sh:ro
+      - ./config/nextmn-srv6-gtp.yaml:/etc/nextmn-srv6/config.yaml
+    networks:
+      mec-net:
+        ipv4_address: 10.0.201.7
+        ipv6_address: fd00:d0cc:e700:1111:4::7
+      srv6-net:
+        ipv4_address: 10.0.219.2
+        ipv6_address: fd00:d0cc:e700:3333:1::2
+    
+# F5GC
+x-f5gc: &f5gc
+  free5gc-populate:
+    image: louisroyer/free5gc-populate
+    container_name: free5gc-populate
+    hostname: free5gc-populate
+    restart: "no" # oneshot
+    depends_on:
+      - mongodb-f5gc
+    command: [" "]
+    environment:
+      MONGO_HOST: "mongodb-f5gc.db"
+      SLICES: |-
+      {% for slice in slices -%}
+        - sst: {{ slices[slice].nssai.sst }}
+          sd: {{ '%06X' | format(slices[slice].nssai.sd) }}
+          varqi: 9
+          dnn: {{slice}}
+      {% endfor -%}
+      IMSI: |-
+      {%- set ue = namespace(id=1) -%}
+      {%for slice in slices %}
+        - imsi-00101{{"%10d" | format(ue.id) }}
+      {%- set ue.id = ue.id + 1 -%}
+      {% endfor %}
+    networks:
+        db:
+  mongodb-f5gc:
+    image: mongo
+    container_name: mongodb-f5gc
+    hostname: mongodb-f5gc
+    command: mongod --port 27017 --bind_ip_all
+    restart: always
+    networks:
+      db:
+
+# TODO: SMF paramétrable
+    smf:
+      container_name: smf
+      hostname: smf
+      restart: always
+      depends_on:
+        - nrf
+      build:
+        context: ./free5gc
+        target: free5gc-smf
+        args:
+          F5GC_RELEASE: v3.2.0
+      image: free5gc-smf
+      volumes:
+        - ./config/smf-config.yaml:/etc/smf/smf-config.yaml:ro
+        - ./config/ue-routing.yaml:/etc/smf/ue-routing.yaml:ro
+      cap_add:
+        - NET_ADMIN
+      command: --config /etc/smf/smf-config.yaml --uerouting /etc/smf/ue-routing.yaml
+      networks:
+        n4:
+          ipv4_address: {{ "10.0.%d.1" | format(networks.n4.subnet_id) }}
+        sbi:
+          ipv4_address: {{ "10.0.%d.1" | format(networks.sbi.subnet_id) }}
+
+# TODO: AMF paramétrable
+    amf:
+      container_name: amf
+      hostname: amf
+      restart: always
+      depends_on:
+        - nrf
+      build:
+        context: ./free5gc
+        target: free5gc-amf
+        args:
+          F5GC_RELEASE: v3.2.0
+      image: free5gc-amf
+      volumes:
+        - ./config/templates/config-amf.yaml:/etc/amf/config-template.yaml:ro
+        - ./config/templates/scripts/config-amf.sh:/usr/local/bin/config.sh:ro
+      command: --config /etc/amf/config.yaml
+      cap_add:
+        - NET_ADMIN
+      sysctls:
+        - net.ipv6.conf.all.disable_ipv6=0
+      environment:
+        TEMPLATE: "/etc/amf/config-template.yaml"
+        CONFIG_FILE: "/etc/amf/config.yaml"
+        CONFIG_SCRIPT: "config.sh"
+        NGAP_IP: "{{ "10.0.%d.%d" | format(networks.n2.subnet_id, 129+1) }}"
+        SBI_REGISTER_IP: "amf.sbi"
+        SBI_BINDING_IP: "{{ "10.0.%d.%d" | format(networks.sbi.subnet_id, 129+2) }}"
+        MCC: "001"
+        MNC: "01"
+        AMF_ID: "000001"
+        AMF_NAME: "AMF1"
+        NRF_URI: "http://nrf.sbi-net:8000"
+        DNN_LIST: "{% for slice in slices %}{{ slice }}{% if not loop.last %} {% endif %}{% endfor %}"
+        SST_LIST: "{% for slice in slices %}{{ "%d" | format(slices[slice].nssai.sst) }}{% if not loop.last %} {% endif %}{% endfor %}"
+        SD_LIST: "{% for slice in slices %}{{ "%06x" | format(slices[slice].nssai.sd) }}{% if not loop.last %} {% endif %}{% endfor %}"
+        TAC: "1"
+        LOCALITY: "loc1"
+      networks:
+        sbi:
+          ipv4_address: {{ "10.0.%d.%d" | format(networks.sbi.subnet_id, 129+2) }}
+        n2:
+          ipv4_address: {{ "10.0.%d.%d" | format(networks.n2.subnet_id, 129+1) }}
+
+  {% for nf in ["nrf", "ausf", "n3iwf", "nssf", "pcf", "udm", "udr"] -%}
+  {{ nf }}:
+    container_name: {{ nf }}
+    hostname: {{ nf }}
+    restart: always
+    {% if nf != "nrf" -%}
+    depends_on:
+      - nrf
+    {% endif -%}
+    build:
+      context: ./free5gc
+      target: free5gc-{{ nf }}
+      args:
+        F5GC_RELEASE: v3.2.0
+    image: free5gc-{{ nf }}
+    environment:
+      TEMPLATE: "/etc/{{ nf }}/config-template.yaml"
+      CONFIG_FILE: "/etc/{{ nf }}/config.yaml"
+      CONFIG_SCRIPT: "config.sh"
+      {% if nf != "nrf" -%}
+      NRF: nrf.sbi:8000
+      {% endif -%}
+      {% if nf in ["nrf", "pcf", "udr"] -%}
+      MONGO_HOST: "mongodb-free5gc.db"
+      {% endif -%}
+      BINDING_IP: {{ "10.0.%d.%d" | format(networks.sbi.subnet_id, 129+loop.index+2) }}
+      REGISTER_IP: {{ nf }}.sbi
+      {% if nf == "nssf" -%}
+      SUPPORTED_NSSAIS: |-
+        {%for slice in slices %}- sst: {{ slices[slice].nssai.sst }}
+          sd: {{ '%06X' | format(slices[slice].nssai.sd) }}{% endfor %}
+      {% endif -%}
+    volumes:
+        - ./config/templates/config-{{ nf }}.yaml:/etc/{{ nf }}/config-template.yaml:ro
+        - ./config/templates/scripts/config-{{ nf }}.sh:/usr/local/bin/config.sh:ro
+    command: --config /etc/{{ nf }}/config.yaml
+    networks:
+      sbi:
+        ipv4_address: {{ "10.0.%d.%d" | format(networks.sbi.subnet_id, 129+loop.index+2) }}
+      {% if nf in ["nrf", "pcf", "udr"] -%}
+      db:
+      {% endif %}
+  {% endfor %}
+
+
+
+
+# GNB CONFIG
+x-gnb-common: &gnb-common
+  image: louisroyer/ueransim-gnb
+  cap_add:
+    - NET_ADMIN
+  devices:
+    - "/dev/net/tun:/dev/net/tun"
+  sysctls:
+    - net.ipv6.conf.all.disable_ipv6=0
+  command: [" "]
+
+x-gnb-environment-common: &gnb-environment-common
+  MCC: "001"
+  MNC: "01"
+  ID_LEN: 32
+  TAC: 1
+  AMF_CONFIGS: |-
+    - address: 10.0.214.3
+      port : 38412
+    #- address: fd00:d0cc:e700:1111:3::3
+    #  port : 38412
+
+
+# GNB
+x-gnb: &gnb
+  {%- for slice in slices %}
+  {{ "gnb%d" | format(loop.index) | with_debug | indent(2) }}
+    <<: *gnb-common
+    container_name: {{ "gnb%d" | format(loop.index) }}
+    hostname: {{ "gnb%d" | format(loop.index) }}
+    volumes:
+        - ./config/routing-gnb.sh:/usr/local/bin/routing.sh:ro
+    environment:
+      NCI: {{ "%09x" | format(loop.index) }}
+      ROUTING_SCRIPT: "routing.sh"
+      RLS_IP: "{{ "fd00:0:0:0:%x:8000:0:%4x" | format(, networks.ran.subnet_id, loop.index) }}"
+      #RLS_IP: "{{ "10.0.%d.%d" | format(networks.ran.subnet_id, 129 + loop.index) }}"
+      N2_IP: "10.0.213.2"
+      N3_IP: "10.0.201.2"
+      SUPPORTED_NSSAIS: |-
+        - sst: {{ slices[slice].nssai.sst }}
+          sd: {{ "%06X", format(slices[slice].nssai.sd) }}
+      {% endif -%}
+  {% endfor %}
+      networks:
+        ran:
+          ipv4_address: {{ "10.0.%d.%d" | format(networks.ran.subnet_id, 129 + loop.index) }}
+          ipv6_address: {{ "fd00:0:0:0:%x:8000:0:%4x" | format(, networks.ran.subnet_id, loop.index) }}
+        n2:
+          ipv4_address: {{ "10.0.%d.%d" | format(networks.n2.subnet_id, 129 + loop.index + 1) }}
+        dataplane:
+          ipv4_address: {{ "10.0.%d.%d" | format(networks.dataplane.subnet_id, 129 + loop.index + 1) }}
+
+# USER EQUIPMENTS CONFIG
+x-ue-environment-common: &ue-environment-common
+  MCC: "001"
+  MNC: "01"
+
+{%- for slice in slices %}
+x-ue-environment-slice-{{ slice }}: &ue-environment-slice-{{ slice }}
+  <<: *ue-environment-common
+  GNBS: |-
+  #- "10.0.200.{{ '%d' | format(129 + loop.index) }}"
+  - "fd00:d0cc:e700:1111:1:8000:0:{{ '%04x' | format(1 + loop.index) }}"
+  CONFIGURED_NSSAI: |-
+    - sst: {{ slices[slice].nssai.sst }}
+      sd: {{ '%06X' | format(slices[slice].nssai.sd) }}
+  DEFAULT_NSSAI: |-
+    - sst: {{ slices[slice].nssai.sst }}
+      sd: {{ '%06X' | format(slices[slice].nssai.sd) }}
+  SESSIONS: |-
+    - type: "IPv4"
+      apn: "{{ slice }}"
+      slice:
+        sst: {{ slices[slice].nssai.sst }}
+        sd: {{ '%06X' | format(slices[slice].nssai.sd) }}
+{% endfor %}
+
+x-ue-common: &ue-common
+  image: louisroyer/ueransim-ue
+  cap_add:
+    - NET_ADMIN
+  devices:
+    - "/dev/net/tun:/dev/net/tun"
+  sysctls:
+    - net.ipv6.conf.all.disable_ipv6=0
+  dns:
+    - {{ services.dns.service_id }}
+  command: [" "]
+  networks:
+    ran-net: # automatic allocation for UEs
+
+x-ue: &user-equipments
+  # USER EQUIPMENTS
+{%- set ue = namespace(id=1) -%}
+{%- for slice in slices -%}
+  {%- for _ in range(slices[slice].ue) %}
+  {{ "ue%d" | format(ue.id) | with_debug | indent(2) }}
+    <<: *ue-common
+    container_name: ue{{ ue.id}}
+    hostname: ue{{ ue.id }}
+    environment:
+      <<: *ue-environment-slice-{{ slice }}
+      MSISDN: "000000000{{ ue.id }}"
+  {{ "ue%d" | format(ue.id) | socks | indent(4) }}
+  {%- set ue.id = ue.id + 1 -%}
+  {# newline #}
+  {% endfor %}
+{% endfor %}
+
+
+x-data-networks: &data-networks
+  # DATA NETWORKS SERVICES
+  {%- for service in services %}
+    {%- for edge in services[service].dn %}
+  {{ "%s-%s" | format(service, edge.dnn) | with_debug | indent(2) }}
+    container_name: {{ service }}-{{ edge.dnn }}
+    hostname: {{ service }}-{{ edge.dnn }}
+    {%- if services[service].type == "nginx" -%}
+    image: nginx
+    volumes:
+      - ./nginx/templates:/etc/nginx/templates:ro
+      - /home/louis/Vidéos:/usr/share/nginx/videos:ro
+    environment:
+      NGINX_PORT: 80
+      NGINX_SERVER_NAMES: {% if edge.dnn != "internet" %}{{ service }}.mec.test {% endif %}{{ service }}.test
+      NGINX_CONTENT: "Service ID: {{ service }}.test ({{ services[service].service_id }})\nInstance ID: {{ service }}{% if edge.dnn != "internet" %}.{{ edge.dnn }}{% endif %}.test ({{ edge.ipv4 }})\n"
+    networks:
+      {{ edge.dnn }}:
+        ipv4_address: {{ edge.ipv4 }} 
+    {%- else -%}{%- if services[service].type == "dns" -%}
+    init: true
+    image: bind9
+    build:
+      context: ./bind9
+    command: -g -p 53
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ./bind9/{% if edge.dnn != "internet" %}mec-{% endif %}named.conf.local:/etc/bind/named.conf.local:ro
+      - ./bind9/{% if edge.dnn == "internet" %}mno-{% endif %}named.conf.options:/etc/bind/named.conf.options:ro
+      - ./bind9/test{% if edge.dnn != "internet" %}-mec{% endif %}.db:/etc/bind/zones/test.db:ro
+      - ./config/routing{% if edge.dnn != "internet" %}-mec{% endif %}-dns.sh:/usr/local/bin/routing.sh:ro
+    environment:
+      - ROUTING=routing.sh
+    networks:
+      {{ edge.dnn }}:
+        ipv4_address: {{ edge.ipv4 }}
+
+    {%- endif %}{%- endif %}
+    {% endfor %}
+  {% endfor %}
+
+services:
+  <<: *data-networks
+  <<: *user-equipments
+  <<: *gnb
+  <<: *f5gc
+
+#  <<: [*group-ue, *group-gnb, *group-upf-i, *group-upf-a, *group-core-network-main-nf, *group-core-network-aux-nf, *group-mec-dn, *group-internet-dn, *group-trunks, *group-nextmn-srv6]
+
+
+networks:
+  {%- for net in networks -%}
+  {{ '{
+       "name": "%s",
+       "ipv4_prefix": "10.0.%d.0/24",
+       "ipv6_prefix": "fd00:0:0:0:%04x::/80"
+      }' | format(net, networks[net].subnet_id, networks[net].subnet_id) | network | indent(2) }}
+  {% endfor %}

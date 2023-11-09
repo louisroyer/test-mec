@@ -1,0 +1,95 @@
+networks:
+  ran:
+    subnet_id: 1
+    enable_ipv6: true
+  n2:
+    subnet_id: 2
+    enable_ipv6: false
+  n4:
+    subnet_id: 3
+    enable_ipv6: false
+  dataplane:
+    subnet_id: 4
+    enable_ipv6: true
+  sbi:
+    subnet_id: 5
+    enable_ipv6: false
+  db:
+    subnet_id: 6
+    enable_ipv6: false
+  edge0:
+    subnet_id: 7
+    enable_ipv6: false
+  edge1:
+    subnet_id: 8
+    enable_ipv6: false
+  internet:
+    subnet_id: 9
+    enable_ipv6: false
+
+
+
+
+slices:
+#  gtp4:
+#    nssai:
+#      sst: 1
+#      sd: 0x000001
+#    ue: 2
+
+#  non-terrestrial:
+#    nssai:
+#      sst: 1
+#      sd: 0x000002
+#    ue: 2
+
+  srv6:
+    nssai:
+      sst: 1
+      sd: 0x000003
+    ue: 2
+
+services:
+  site1:
+    type: nginx
+    service_id: 10.0.9.2
+    dn:
+      - dnn: internet
+        ipv4: 10.0.7.2
+      - dnn: edge0
+        ipv4: 10.0.8.2
+      - dnn: edge1
+        ipv4: 10.0.9.2
+
+  site2:
+    type: nginx
+    service_id: 10.0.9.3
+    dn:
+      - dnn: internet
+        ipv4: 10.0.7.3
+      - dnn: edge0
+        ipv4: 10.0.8.3
+      - dnn: edge1
+        ipv4: 10.0.9.3
+  site3:
+    type: nginx
+    service_id: 10.0.9.4
+    dn:
+      - dnn: internet
+        ipv4: 10.0.7.4
+      - dnn: edge0
+        ipv4: 10.0.8.4
+      - dnn: edge1
+        ipv4: 10.0.9.4
+  
+  dns:
+    type: dns
+    service_id: 10.0.9.1
+    dn:
+      - dnn: internet
+        ipv4: 10.0.7.1
+      - dnn: edge0
+        ipv4: 10.0.8.1
+      - dnn: edge1
+        ipv4: 10.0.9.1
+

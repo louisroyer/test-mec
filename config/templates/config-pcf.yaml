@@ -6,15 +6,15 @@ configuration:
   pcfName: PCF # the name of this PCF
   sbi: # Service-based interface information
     scheme: http # the protocol for sbi (http or https)
-    registerIPv4: pcf.sbi-net # IP used to register to NRF
-    bindingIPv4: 10.0.211.9  # IP used to bind the service
-    port: 8000              # port used to bind the service
+    registerIPv4: %REGISTER_IP # IP used to register to NRF
+    bindingIPv4: %BINDING_IP # IP used to bind the service
+    port: %BINDING_PORT # port used to bind the service
     tls:
       pem: config/TLS/pcf.pem
       key: config/TLS/pcf.key
   timeFormat: 2019-01-02 15:04:05 # time format of this PCF
   defaultBdtRefId: BdtPolicyId-   # BDT Reference ID, indicating transfer policies of background data transfer.
-  nrfUri: http://nrf.sbi-net:8000  # a valid URI of NRF
+  nrfUri: http://%NRF  # a valid URI of NRF
   serviceList:   # the SBI services provided by this PCF, refer to TS 29.507
     - serviceName: npcf-am-policy-control # Npcf_AMPolicyControl service
     - serviceName: npcf-smpolicycontrol   # Npcf_SMPolicyControl service
@@ -25,8 +25,8 @@ configuration:
     - serviceName: npcf-eventexposure       # Npcf_EventExposure service
     - serviceName: npcf-ue-policy-control   # Npcf_UEPolicyControl service
   mongodb:       # the mongodb connected by this PCF
-    name: free5gc                  # name of the mongodb
-    url: mongodb://mongodb-f5gc.db-net:27017 # a valid URL of the mongodb
+    name: %MONGO_NAME                  # name of the mongodb
+    url: mongodb://%MONGO_HOST:%MONGO_PORT # a valid URL of the mongodb
 
 # the kind of log output
   # debugLevel: how detailed to output, value: trace, debug, info, warn, error, fatal, panic

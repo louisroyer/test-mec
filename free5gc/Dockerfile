@@ -97,37 +97,51 @@ CMD ["-h"]
 
 FROM debian:bookworm-slim as free5gc-nrf
 COPY --from=builder /go/src/free5gc/bin/nrf /usr/local/bin/nrf
-ENTRYPOINT ["nrf"]
+COPY ./entrypoint-nrf.sh /usr/local/bin/entrypoint.sh
+ENV CONFIG_SCRIPT ""
+ENTRYPOINT ["entrypoint.sh"]
 CMD ["-h"]
 
 FROM debian:bookworm-slim as free5gc-ausf
 COPY --from=builder /go/src/free5gc/bin/ausf /usr/local/bin/ausf
-ENTRYPOINT ["ausf"]
+COPY ./entrypoint-ausf.sh /usr/local/bin/entrypoint.sh
+ENV CONFIG_SCRIPT ""
+ENTRYPOINT ["entrypoint.sh"]
 CMD ["-h"]
 
 FROM debian:bookworm-slim as free5gc-n3iwf
 COPY --from=builder /go/src/free5gc/bin/n3iwf /usr/local/bin/n3iwf
-ENTRYPOINT ["n3iwf"]
+COPY ./entrypoint-n3iwf.sh /usr/local/bin/entrypoint.sh
+ENV CONFIG_SCRIPT ""
+ENTRYPOINT ["entrypoint.sh"]
 CMD ["-h"]
 
 FROM debian:bookworm-slim as free5gc-nssf
 COPY --from=builder /go/src/free5gc/bin/nssf /usr/local/bin/nssf
-ENTRYPOINT ["nssf"]
+COPY ./entrypoint-nssf.sh /usr/local/bin/entrypoint.sh
+ENV CONFIG_SCRIPT ""
+ENTRYPOINT ["entrypoint.sh"]
 CMD ["-h"]
 
 FROM debian:bookworm-slim as free5gc-pcf
 COPY --from=builder /go/src/free5gc/bin/pcf /usr/local/bin/pcf
-ENTRYPOINT ["pcf"]
+COPY ./entrypoint-pcf.sh /usr/local/bin/entrypoint.sh
+ENV CONFIG_SCRIPT ""
+ENTRYPOINT ["entrypoint.sh"]
 CMD ["-h"]
 
 FROM debian:bookworm-slim as free5gc-udm
 COPY --from=builder /go/src/free5gc/bin/udm /usr/local/bin/udm
-ENTRYPOINT ["udm"]
+COPY ./entrypoint-udm.sh /usr/local/bin/entrypoint.sh
+ENV CONFIG_SCRIPT ""
+ENTRYPOINT ["entrypoint.sh"]
 CMD ["-h"]
 
 FROM debian:bookworm-slim as free5gc-udr
 COPY --from=builder /go/src/free5gc/bin/udr /usr/local/bin/udr
-ENTRYPOINT ["udr"]
+COPY ./entrypoint-udr.sh /usr/local/bin/entrypoint.sh
+ENV CONFIG_SCRIPT ""
+ENTRYPOINT ["entrypoint.sh"]
 CMD ["-h"]
 
 #FROM debian:bookworm-slim as free5gc-webui

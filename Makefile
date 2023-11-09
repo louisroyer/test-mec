@@ -19,9 +19,14 @@ TESTCASES := explicitaccess dnsredirect appredirect trafficsteering
 
 .PHONY: default u d t l lf e ping uping ip dig waitkey firefox test $(addprefix test/, $(TESTCASES)) $(addprefix test-label/, $(TESTCASES)) 
 
+docker-compose.yaml: docker-compose.yaml.j2 docker-compose/jinja.py testbed-config.yaml
+	j2 -f yaml --filters=docker-compose/jinja.py -o docker-compose.yaml docker-compose.yaml.j2 testbed-config.yaml  
+
 default: u
+b: docker-compose.yaml
+	$(DC) build
 # Start containers
-u:
+u: docker-compose.yaml
 	#$(DC) $(DEBUG) $(SOCKS) up -d
 	$(DC) $(DEBUG) up -d
 # Shutdown containers

@@ -5,16 +5,16 @@ info:
 configuration:
   sbi: # Service-based interface information
     scheme: http # the protocol for sbi (http or https)
-    registerIPv4: udr.sbi-net # IP used to register to NRF
-    bindingIPv4: 10.0.211.8  # IP used to bind the service
-    port: 8000 # port used to bind the service
+    registerIPv4: %REGISTER_IP # IP used to register to NRF
+    bindingIPv4: %BINDING_IP  # IP used to bind the service
+    port: %BINDING_PORT # port used to bind the service
     tls:
       pem: config/TLS/udr.pem
       key: config/TLS/udr.key
   mongodb:
-    name: free5gc # Database name in MongoDB
-    url: mongodb://mongodb-f5gc.db-net:27017 # URL of MongoDB
-  nrfUri: http://nrf.sbi-net:8000 # a valid URI of NRF
+    name: %MONGO_NAME # Database name in MongoDB
+    url: mongodb://%MONGO_HOST:%MONGO_PORT # URL of MongoDB
+  nrfUri: http://%NRF # a valid URI of NRF
 
 # the kind of log output
   # debugLevel: how detailed to output, value: trace, debug, info, warn, error, fatal, panic

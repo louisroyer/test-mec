@@ -11,10 +11,10 @@ configuration:
     - nudm-pp # Nudm_ParameterProvisionDataManagement service
   sbi: # Service-based interface information
     scheme: http # the protocol for sbi (http or https)
-    registerIPv4: udm.sbi-net # IP used to register to NRF
-    bindingIPv4: 10.0.211.7   # IP used to bind the service
+    registerIPv4: %REGISTER_IP # IP used to register to NRF
+    bindingIPv4: %BINDING_IP   # IP used to bind the service
     port: 8000 # Port used to bind the service
-  nrfUri: http://nrf.sbi-net:8000 # a valid URI of NRF
+  nrfUri: http://%NRF # a valid URI of NRF
 
   # test data set from TS33501-f60 Annex C.4
   SuciProfile: # Home Network Public Key ID = slice index + 1

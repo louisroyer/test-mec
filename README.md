@@ -2,6 +2,8 @@
 ## Dependencies
 - GNU Make (`make` Debian's package)
 - [Docker Compose](https://github.com/docker/compose) (v2 and higher)
+- j2cli
+- pyyaml
 
 In your `/etc/docker/daemon.json`, make sure to enable ipv6 and buildkit. Here is the config I use:
 ```json
