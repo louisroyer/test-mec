@@ -6,9 +6,9 @@ configuration:
   smfName: SMF
   sbi:
     scheme: http
-    registerIPv4: smf.sbi # IP used to register to NRF
-    bindingIPv4: 10.0.5.130  # IP used to bind the service
-    port: 8000
+    registerIPv4: %REGISTER_IP # IP used to register to NRF
+    bindingIPv4: %BINDING_IP  # IP used to bind the service
+    port: %BINDING_PORT 
     tls:
       key: config/TLS/smf.key
       pem: config/TLS/smf.pem
@@ -18,10 +18,10 @@ configuration:
     - nsmf-oam
   snssaiInfos:
     - sNssai:
-        sst: 1
-        sd: 3
+        sst: %SST
+        sd: %SD
       dnnInfos:
-        - dnn: srv6
+        - dnn: %DNN
           dns: 
             ipv4: 9.9.9.9
             ipv6: 2001:4860:4860::8888
@@ -46,7 +46,7 @@ configuration:
       mnc: "01"
 
   pfcp:
-    addr: 10.0.210.2 #TODO: change me
+    addr: %N4_IP #TODO: change me
   userplaneInformation:
     upNodes:
       ran-srv6:
@@ -60,20 +60,20 @@ configuration:
 
       upf-srv6:
         type: UPF
-        nodeID: 10.0.210.6 # change me
+        nodeID: %UPF_N4_IP
         sNssaiUpfInfos:
           - sNssai:
-              sst: 1
-              sd: 000003
+              sst: %SST
+              sd: %SD
             dnnUpfInfoList:
-              - dnn: srv6 
+              - dnn: %DNN
                 pools:
-                  - cidr: 10.0.221.0/24 # change me
+                  - cidr: %DN_POOL
         interfaces:
           - interfaceType: N3
             endpoints:
-              - "10.0.201.7" # H.M.GTP4.D instance # change me
-            networkInstance: srv6
+              - "%UPF_N3_IP" # H.M.GTP4.D instance
+            networkInstance: %DNN 
 
 #      upf-mec-area1:
 #        type: UPF
@@ -156,7 +156,7 @@ configuration:
       - A: ran-srv6
         B: upf-srv6
 
-  nrfUri: http://nrf.sbi:8000 
+  nrfUri: http://%NRF
     #  locality: loc1
   ulcl: false # FIXME (pour ne pas oublier de le remettre
 

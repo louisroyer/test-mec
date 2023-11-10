@@ -32,18 +32,25 @@ networks:
 
 slices:
 #  gtp4:
+#    n4_upf_id: 2
+#    pool: 10.0.100.0/24
 #    nssai:
 #      sst: 1
 #      sd: 0x000001
 #    ue: 2
 
 #  non-terrestrial:
+#    n4_upf_id: 3
+#    pool: 10.0.101.0/24
 #    nssai:
 #      sst: 1
 #      sd: 0x000002
 #    ue: 2
 
   srv6:
+    n4_upf_id: 4
+    n3_upf_ip: 10.0.200.1
+    pool: 10.0.102.0/24
     nssai:
       sst: 1
       sd: 0x000003

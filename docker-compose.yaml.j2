@@ -13,6 +13,8 @@ x-debug-hidden-common: &debug-hidden-common
   profiles:
     - debug-hidden
 
+
+# SRV6 CONFIG
 x-nextmn-srv6: &nextmn-srv6
   restart: always
   build:
@@ -32,41 +34,37 @@ x-nextmn-srv6: &nextmn-srv6
   devices:
     - "/dev/net/tun:/dev/net/tun"
 
-
-x-nextmn-srv6-ctrl: &nextmn-srv6-ctrl
-  restart: always
-  build:
-    context: ./nextmn-srv6-ctrl
-    args:
-      NEXTMNSRCTRL_RELEASE: v0.0.1
-  image: nextmn-srv6-ctrl
-  command: ["-c", "/etc/nextmn-srv6-ctrl/config.yaml"]
-
 x-srv6:
   {{ "nextmn-srv6-ctrl" | with_debug | indent(2)}}
-    <<: *nextmn-srv6-ctrl
+    restart: always
+    build:
+      context: ./nextmn-srv6-ctrl
+      args:
+        NEXTMNSRCTRL_RELEASE: v0.0.1
+    image: nextmn-srv6-ctrl
+    command: ["-c", "/etc/nextmn-srv6-ctrl/config.yaml"]
     container_name: nextmn-srv6-ctrl
     hostname: nextmn-srv6-ctrl
     volumes:
-      - ./config/nextmn-srv6-ctrl.yaml:/etc/nextmn-srv6-ctrl/config.yaml
+      - ./config/templates/config-nextmn-srv6-ctrl.yaml:/etc/nextmn-srv6-ctrl/config-template.yaml:ro
+      - ./config/templates/scripts/config-nextmn-srv6-ctrl.sh:/usr/local/bin/config.sh:ro
+    environment:
+      N4_IP: {{ "10.0.%d.%d" | format(networks.n4.subnet_id, slices.srv6.n4_upf_id) }}
     networks:
-      n4-net:
-        ipv4_address: 10.0.210.6
+      n4:
+        ipv4_address: {{ "10.0.%d.%d" | format(networks.n4.subnet_id, slices.srv6.n4_upf_id) }}
 
-  {{ "nextmn-srv6-dn" | with_debug | indent(2)}}
+  {%- for slice in slices -%}
+  {{ "nextmn-srv6-dn-%s" | format(slice) | with_debug | indent(2)}}
     <<: *nextmn-srv6
-    container_name: nextmn-srv6-dn
-    hostname: nextmn-srv6-dn
+    container_name: nextmn-srv6-dn-{{ slice }}
+    hostname: nextmn-srv6-dn-{{ slice }}
     volumes:
       - ./config/nextmn-srv6-pre-init-hook.sh:/usr/local/bin/pre-init-hook.sh:ro
       - ./config/nextmn-srv6-ipv4-post-init-hook.sh:/usr/local/bin/post-init-hook.sh:ro
       - ./config/nextmn-srv6-ipv4.yaml:/etc/nextmn-srv6/config.yaml
     networks:
-      srv6-net:
-        ipv4_address: 10.0.219.3
-        ipv6_address: fd00:d0cc:e700:3333:1::3
-      test-net:
-        ipv4_address: 10.0.224.8
+  {%- endfor -%}
     
   {{ "nextmn-srv6-gtp" | with_debug | indent(2)}}
     <<: *nextmn-srv6
@@ -77,12 +75,6 @@ x-srv6:
       - ./config/nextmn-srv6-gtp-post-init-hook.sh:/usr/local/bin/post-init-hook.sh:ro
       - ./config/nextmn-srv6-gtp.yaml:/etc/nextmn-srv6/config.yaml
     networks:
-      mec-net:
-        ipv4_address: 10.0.201.7
-        ipv6_address: fd00:d0cc:e700:1111:4::7
-      srv6-net:
-        ipv4_address: 10.0.219.2
-        ipv6_address: fd00:d0cc:e700:3333:1::2
     
 # F5GC
 x-f5gc: &f5gc
@@ -133,18 +125,32 @@ x-f5gc: &f5gc
         F5GC_RELEASE: v3.2.0
     image: free5gc-smf
     volumes:
-      - ./config/smf-config.yaml:/etc/smf/smf-config.yaml:ro
       - ./config/ue-routing.yaml:/etc/smf/ue-routing.yaml:ro
+      - ./config/templates/config-smf.yaml:/etc/amf/config-template.yaml:ro
+      - ./config/templates/scripts/config-smf.sh:/usr/local/bin/config.sh:ro
+    environment:
+      TEMPLATE: "/etc/smf/config-template.yaml"
+      CONFIG_FILE: "/etc/smf/config.yaml"
+      CONFIG_SCRIPT: "config.sh"
+      BINDING_IP: {{ "10.0.%d.%d" | format(networks.sbi.subnet_id, 129+1) }}
+      REGISTER_IP: smf.sbi
+      NRF: nrf.sbi
+      N4_IP: {{ "10.0.%d.1" | format(networks.n4.subnet_id) }}
+      UPF_N4_IP: {{ "10.0.%d.%d" | format(networks.n4.subnet_id, slices.srv6.n4_upf_id) }}
+      UPF_N3_IP: {{ slices.srv6.n3_upf_ip }}
+      DN_POOL: {{ slices.srv6.pool }}
+      DNN: srv6
+      SST: {{ slices.srv6.nssai.sst }}
+      SD: {{ slices.srv6.nssai.sd }}
     cap_add:
       - NET_ADMIN
-    command: --config /etc/smf/smf-config.yaml --uerouting /etc/smf/ue-routing.yaml
+    command: --config /etc/smf/config.yaml --uerouting /etc/smf/ue-routing.yaml
     networks:
       n4:
         ipv4_address: {{ "10.0.%d.1" | format(networks.n4.subnet_id) }}
       sbi:
         ipv4_address: {{ "10.0.%d.1" | format(networks.sbi.subnet_id) }}
 
-# TODO: AMF paramétrable
   amf:
     container_name: amf
     hostname: amf
@@ -175,7 +181,7 @@ x-f5gc: &f5gc
       MCC: "001"
       MNC: "01"
       AMF_ID: "000001"
-      AMF_NAME: "AMF1"
+      AMF_NAME: "AMF"
       NRF_URI: "http://nrf.sbi-net:8000"
       DNN_LIST: "{% for slice in slices %}{{ slice }}{% if not loop.last %} {% endif %}{% endfor %}"
       SST_LIST: "{% for slice in slices %}{{ "%d" | format(slices[slice].nssai.sst) }}{% if not loop.last %} {% endif %}{% endfor %}"
