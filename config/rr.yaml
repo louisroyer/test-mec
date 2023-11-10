@@ -1,0 +1,10 @@
+hooks:
+  pre-init-hook: /config/routing-rr.sh
+debug: true
+locator: "fd00:2::/32"
+endpoints:
+  - prefix: "fd00:2:1::/48"
+    provider: "Linux"
+    behavior: "End"
+
+

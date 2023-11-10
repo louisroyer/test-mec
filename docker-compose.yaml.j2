@@ -54,27 +54,50 @@ x-srv6:
       n4:
         ipv4_address: {{ "10.0.%d.%d" | format(networks.n4.subnet_id, slices.srv6.n4_upf_id) }}
 
-  {%- for slice in slices -%}
-  {{ "nextmn-srv6-dn-%s" | format(slice) | with_debug | indent(2)}}
+  {%- for edge in services.srv6_router.dn -%}
+  {{ "nextmn-srv6-dn-%s" | format(edge.dnn) | with_debug | indent(2)}}
     <<: *nextmn-srv6
-    container_name: nextmn-srv6-dn-{{ slice }}
-    hostname: nextmn-srv6-dn-{{ slice }}
+    container_name: nextmn-srv6-dn-{{ edge.dnn }}
+    hostname: nextmn-srv6-dn-{{ edge.dnn }}
     volumes:
       - ./config/nextmn-srv6-pre-init-hook.sh:/usr/local/bin/pre-init-hook.sh:ro
-      - ./config/nextmn-srv6-ipv4-post-init-hook.sh:/usr/local/bin/post-init-hook.sh:ro
-      - ./config/nextmn-srv6-ipv4.yaml:/etc/nextmn-srv6/config.yaml
+      - ./config/nextmn-dn-{{ edge.dnn }}-post-init-hook.sh:/usr/local/bin/post-init-hook.sh:ro
+      - ./config/nextmn-dn-{{ edge.dnn }}.yaml:/etc/nextmn-srv6/config.yaml
     networks:
+      {{ edge.dnn }}:
+        ipv4_address: {{ edge.ipv4 }}
+      dataplane:
+        ipv4_address: {{ "10.0.%d.%d" | format(networks.dataplane.subnet_id, 129+2+loop.index) }}
+        ipv6_address: {{ "fd00:0:0:0:%x:8000:0:%x" | format(networks.dataplane.subnet_id, 2+loop.index) }}
   {%- endfor -%}
     
-  {{ "nextmn-srv6-gtp" | with_debug | indent(2)}}
+  {{ "nextmn-srgw" | with_debug | indent(2)}}
     <<: *nextmn-srv6
-    container_name: nextmn-srv6-gtp
-    hostname: nextmn-srv6-gtp
+    container_name: nextmn-srgw
+    hostname: nextmn-srgw
     volumes:
       - ./config/nextmn-srv6-pre-init-hook.sh:/usr/local/bin/pre-init-hook.sh:ro
-      - ./config/nextmn-srv6-gtp-post-init-hook.sh:/usr/local/bin/post-init-hook.sh:ro
-      - ./config/nextmn-srv6-gtp.yaml:/etc/nextmn-srv6/config.yaml
+      - ./config/nextmn-srgw-post-init-hook.sh:/usr/local/bin/post-init-hook.sh:ro
+      - ./config/srgw.yaml:/etc/nextmn-srv6/config.yaml
     networks:
+      n3:
+        ipv4_address: {{ "10.0.%d.%d" | format(networks.n3.subnet_id, 129+1) }}
+      dataplane:
+        ipv4_address: {{ "10.0.%d.%d" | format(networks.dataplane.subnet_id, 129+1) }}
+        ipv6_address: {{ "fd00:0:0:0:%x:8000:0:%x" | format(networks.dataplane.subnet_id, 1) }}
+
+  {{ "nextmn-rr" | with_debug | indent(2)}}
+    <<: *nextmn-srv6
+    container_name: nextmn-rr
+    hostname: nextmn-rr
+    volumes:
+      - ./config/nextmn-srv6-pre-init-hook.sh:/usr/local/bin/pre-init-hook.sh:ro
+      - ./config/nextmn-rr-post-init-hook.sh:/usr/local/bin/post-init-hook.sh:ro
+      - ./config/rr.yaml:/etc/nextmn-srv6/config.yaml
+    networks:
+      dataplane:
+        ipv4_address: {{ "10.0.%d.%d" | format(networks.dataplane.subnet_id, 129+2) }}
+        ipv6_address: {{ "fd00:0:0:0:%x:8000:0:%x" | format(networks.dataplane.subnet_id, 2) }}
     
 # F5GC
 x-f5gc: &f5gc
@@ -258,10 +281,8 @@ x-gnb-environment-common: &gnb-environment-common
   ID_LEN: 32
   TAC: 1
   AMF_CONFIGS: |-
-    - address: 10.0.214.3
+    - address: {{ "10.0.%d.%d" | format(networks.n2.subnet_id, 129+1) }}
       port : 38412
-    #- address: fd00:d0cc:e700:1111:3::3
-    #  port : 38412
 
 
 # GNB
@@ -289,8 +310,8 @@ x-gnb: &gnb
         ipv6_address: {{ "fd00:0:0:0:%x:8000:0:%x" | format(networks.ran.subnet_id, loop.index) }}
       n2:
         ipv4_address: {{ "10.0.%d.%d" | format(networks.n2.subnet_id, 129 + loop.index + 1) }}
-      dataplane:
-        ipv4_address: {{ "10.0.%d.%d" | format(networks.dataplane.subnet_id, 129 + loop.index + 1) }}
+      n3:
+        ipv4_address: {{ "10.0.%d.%d" | format(networks.n3.subnet_id, 129 + loop.index + 1) }}
   {% endfor %}
 
 # USER EQUIPMENTS CONFIG
@@ -333,8 +354,8 @@ x-ue-common: &ue-common
     - "/dev/net/tun:/dev/net/tun"
   sysctls:
     - net.ipv6.conf.all.disable_ipv6=0
-  dns:
-    - {{ services.dns.service_id }}
+  {# dns:
+    - {{ services.dns.service_id }} #}
   command: [" "]
   networks:
     ran: # automatic allocation for UEs
@@ -361,6 +382,7 @@ x-data-networks: &data-networks
   # DATA NETWORKS SERVICES
   {%- for service in services %}
     {%- for edge in services[service].dn %}
+    {%- if services[service].type != "srv6" %}
   {{ "%s-%s" | format(service, edge.dnn) | with_debug | indent(2) }}
     container_name: {{ service }}-{{ edge.dnn }}
     hostname: {{ service }}-{{ edge.dnn }}
@@ -395,15 +417,12 @@ x-data-networks: &data-networks
       {{ edge.dnn }}:
         ipv4_address: {{ edge.ipv4 }}
 
-    {%- endif %}{%- endif %}
+    {%- endif %}{%- endif %}{%- endif %}
     {% endfor %}
   {% endfor %}
 
 services:
-  <<: [*data-networks, *user-equipments, *gnb, *f5gc]
-
-#  <<: [*group-ue, *group-gnb, *group-upf-i, *group-upf-a, *group-core-network-main-nf, *group-core-network-aux-nf, *group-mec-dn, *group-internet-dn, *group-trunks, *group-nextmn-srv6]
-
+  <<: [*data-networks, *user-equipments, *gnb, *f5gc, *srv6]
 
 networks:
   {% for net in networks -%}

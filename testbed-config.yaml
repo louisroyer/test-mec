@@ -26,6 +26,9 @@ networks:
   internet:
     subnet_id: 9
     enable_ipv6: false
+  n3:
+    subnet_id: 10
+    enable_ipv6: false
 
 
 
@@ -59,10 +62,10 @@ slices:
 services:
   site1:
     type: nginx
-    service_id: 10.0.9.2
+    service_id: 10.0.7.2
     dn:
-      - dnn: internet
-        ipv4: 10.0.7.2
+#      - dnn: internet
+#        ipv4: 10.0.7.2
       - dnn: edge0
         ipv4: 10.0.8.2
       - dnn: edge1
@@ -70,33 +73,40 @@ services:
 
   site2:
     type: nginx
-    service_id: 10.0.9.3
+    service_id: 10.0.7.3
     dn:
-      - dnn: internet
-        ipv4: 10.0.7.3
+#      - dnn: internet
+#        ipv4: 10.0.7.3
       - dnn: edge0
         ipv4: 10.0.8.3
       - dnn: edge1
         ipv4: 10.0.9.3
   site3:
     type: nginx
-    service_id: 10.0.9.4
+    service_id: 10.0.7.4
     dn:
-      - dnn: internet
-        ipv4: 10.0.7.4
+#      - dnn: internet
+#        ipv4: 10.0.7.4
       - dnn: edge0
         ipv4: 10.0.8.4
       - dnn: edge1
         ipv4: 10.0.9.4
   
-  dns:
-    type: dns
-    service_id: 10.0.9.1
+  srv6_router:
+    type: srv6
     dn:
-      - dnn: internet
-        ipv4: 10.0.7.1
       - dnn: edge0
-        ipv4: 10.0.8.1
+        ipv4: 10.0.8.5
       - dnn: edge1
-        ipv4: 10.0.9.1
+        ipv4: 10.0.8.6
+#  dns:
+#    type: dns
+#    service_id: 10.0.7.1
+#    dn:
+#      - dnn: internet
+#        ipv4: 10.0.7.1
+#      - dnn: edge0
+#        ipv4: 10.0.8.1
+#      - dnn: edge1
+#        ipv4: 10.0.9.1
 

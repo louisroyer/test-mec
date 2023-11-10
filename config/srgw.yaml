@@ -1,0 +1,31 @@
+hooks:
+  pre-init-hook: pre-init-hook.sh
+  post-init-hook: post-init-hook.sh
+debug: true
+ipv4-headend-prefix: "10.0.200.1/32" # handle packets with this destination
+headends:
+  - name: "srgw uplink"
+    to: "10.0.200.1/32"
+    provider: "NextMN"
+    behavior: "H.M.GTP4.D"
+    source-address-prefix: "fd00:1:1::/48"
+    policy:
+      - match:
+          teid: 0x01
+        bsid:
+          bsid-prefix: "fd00:3:1::/48"
+          segments-list:
+            - "fd00:2:1::"
+      - match:
+          teid: 0x02
+        bsid:
+          bsid-prefix: "fd00:4:1::/48"
+          segments-list:
+            - "fd00:2:1::"
+
+locator: "fd00:1::/32"
+endpoints:
+  - prefix: "fd00:1:1::/48"
+    provider: "NextMN"
+    behavior: "End.M.GTP4.E"
+
