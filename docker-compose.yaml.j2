@@ -34,7 +34,7 @@ x-nextmn-srv6: &nextmn-srv6
   devices:
     - "/dev/net/tun:/dev/net/tun"
 
-x-srv6:
+x-srv6: &srv6
   {{ "nextmn-srv6-ctrl" | with_debug | indent(2)}}
     restart: always
     build:
@@ -54,7 +54,7 @@ x-srv6:
       n4:
         ipv4_address: {{ "10.0.%d.%d" | format(networks.n4.subnet_id, slices.srv6.n4_upf_id) }}
 
-  {%- for edge in services.srv6_router.dn -%}
+  {% for edge in services.srv6_router.dn -%}
   {{ "nextmn-srv6-dn-%s" | format(edge.dnn) | with_debug | indent(2)}}
     <<: *nextmn-srv6
     container_name: nextmn-srv6-dn-{{ edge.dnn }}
@@ -69,7 +69,7 @@ x-srv6:
       dataplane:
         ipv4_address: {{ "10.0.%d.%d" | format(networks.dataplane.subnet_id, 129+2+loop.index) }}
         ipv6_address: {{ "fd00:0:0:0:%x:8000:0:%x" | format(networks.dataplane.subnet_id, 2+loop.index) }}
-  {%- endfor -%}
+  {% endfor %}
     
   {{ "nextmn-srgw" | with_debug | indent(2)}}
     <<: *nextmn-srv6
