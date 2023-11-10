@@ -29,6 +29,9 @@ In your `/etc/docker/daemon.json`, make sure to enable ipv6 and buildkit. Here i
 
 - `golang` (I use version 2:1.19~1~bpo11+1 from Debian bullseye's backports), to build NextMN-UPF.
 
+### Development dependencies
+If you are using vim, a plugin for syntaxic coloration of `docker-compose.yaml.j2` is available at [https://github.com/louisroyer/vim-yaml-jinja](github.com/louisroyer/vim-yaml-jinja).
+
 ## Build
 The current version use [NextMN-UPF](https://github.com/louisroyer/nextmn-upf), an experimental UPF I developped. It may not be very stable, and breaking changes may still happen.
 For the moment, to be able to use it you need to build it appart and put the binary at `../nextmn-upf/nextmn-upf` from this directory.
