@@ -69,5 +69,3 @@ awk \
 		print;
 	}' \
 	"${TEMPLATE}" > "${CONFIG_FILE}"
-
-cat "${CONFIG_FILE}"

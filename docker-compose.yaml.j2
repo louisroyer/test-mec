@@ -152,7 +152,7 @@ x-f5gc: &f5gc
     image: free5gc-smf
     volumes:
       - ./config/ue-routing.yaml:/etc/smf/ue-routing.yaml:ro
-      - ./config/templates/config-smf.yaml:/etc/amf/config-template.yaml:ro
+      - ./config/templates/config-smf.yaml:/etc/smf/config-template.yaml:ro
       - ./config/templates/scripts/config-smf.sh:/usr/local/bin/config.sh:ro
     environment:
       TEMPLATE: "/etc/smf/config-template.yaml"
@@ -160,14 +160,14 @@ x-f5gc: &f5gc
       CONFIG_SCRIPT: "config.sh"
       BINDING_IP: {{ "10.0.%d.%d" | format(networks.sbi.subnet_id, 129+1) }}
       REGISTER_IP: smf.sbi
-      NRF: nrf.sbi
+      NRF_URI: "http://nrf.sbi:8000"
       N4_IP: {{ "10.0.%d.1" | format(networks.n4.subnet_id) }}
       UPF_N4_IP: {{ "10.0.%d.%d" | format(networks.n4.subnet_id, slices.srv6.n4_upf_id) }}
       UPF_N3_IP: {{ slices.srv6.n3_upf_ip }}
       DN_POOL: {{ slices.srv6.pool }}
       DNN: srv6
       SST: {{ slices.srv6.nssai.sst }}
-      SD: {{ slices.srv6.nssai.sd }}
+      SD: "{{ "%06X" | format(slices.srv6.nssai.sd) }}"
     cap_add:
       - NET_ADMIN
     command: --config /etc/smf/config.yaml --uerouting /etc/smf/ue-routing.yaml

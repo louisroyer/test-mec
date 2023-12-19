@@ -156,7 +156,7 @@ configuration:
       - A: ran-srv6
         B: upf-srv6
 
-  nrfUri: http://%NRF
+  nrfUri: %NRF_URI
     #  locality: loc1
   ulcl: false # FIXME (pour ne pas oublier de le remettre
 

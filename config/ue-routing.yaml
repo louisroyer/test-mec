@@ -3,6 +3,13 @@ info:
   description: Routing information for UE
 
 ueRoutingInfo: # the list of UE routing information
+  none:
+    members:
+      - imsi-001010000000001
+    topology:
+      - A: ran-srv6
+        B: upf-srv6
+
 #  SR:
 #    members:
 #      - imsi-001010000000011

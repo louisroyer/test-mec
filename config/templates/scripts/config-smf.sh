@@ -12,8 +12,8 @@ if [ -z "$REGISTER_IP" ]; then
 	exit 1
 fi
 
-if [ -z "$NRF" ]; then
-	echo "Missing mandatory environment variable (NRF)." > /dev/stderr
+if [ -z "$NRF_URI" ]; then
+	echo "Missing mandatory environment variable (NRF_URI)." > /dev/stderr
 	exit 1
 fi
 
@@ -49,19 +49,34 @@ if [ -z "$SST" ]; then
 	exit 1
 fi
 
-cp "${TEMPLATE}" "${CONFIG_FILE}"
-sed -i "s/%BINDING_IP/${BINDING_IP}/g" "${CONFIG_FILE}"
-sed -i "s/%REGISTER_IP/${REGISTER_IP}/g" "${CONFIG_FILE}"
-sed -i "s/%BINDING_PORT/${BINDING_PORT:-8000}/g" "${CONFIG_FILE}"
-sed -i "s/%NRF/${NRF}/g" "${CONFIG_FILE}"
-sed -i "s/%N4_IP/${N4_IP}/g" "${CONFIG_FILE}"
+awk \
+	-v BINDING_IP="${BINDING_IP}" \
+	-v REGISTER_IP="${REGISTER_IP}" \
+	-v BINDING_PORT="${BINDING_PORT:-8000}" \
+	-v NRF_URI="${NRF_URI}" \
+	-v N4_IP="${N4_IP}" \
+	-v UPF_N4_IP="${UPF_N4_IP}" \
+	-v UPF_N3_IP="${UPF_N3_IP}" \
+	-v DN_POOL="${DN_POOL}" \
+	-v DNN="${DNN}" \
+	-v SD="${SD}" \
+	-v SST="${SST}" \
+	'{
+		sub(/%SUPPORTED_NSSAIS_INDENT8/, SUPPORTED_NSSAIS_SUB_INDENT8);
+		sub(/%SUPPORTED_NSSAIS_INDENT12/, SUPPORTED_NSSAIS_SUB_INDENT12);
+		sub(/%BINDING_IP/, BINDING_IP);
+		sub(/%REGISTER_IP/, REGISTER_IP);
+		sub(/%BINDING_PORT/, BINDING_PORT);
+		sub(/%NRF_URI/, NRF_URI);
+		sub(/%N4_IP/, N4_IP);
+		sub(/%UPF_N4_IP/, UPF_N4_IP);
+		sub(/%UPF_N3_IP/, UPF_N3_IP);
+		sub(/%DN_POOL/, DN_POOL);
+		sub(/%DNN/, DNN);
+		sub(/%SD/, SD);
+		sub(/%SST/, SST);
+		print;
+	}' \
+	"${TEMPLATE}" > "${CONFIG_FILE}"
 
-# TODO: Replace this
-sed -i "s/%UPF_N4_IP/${UPF_N4_IP}/g" "${CONFIG_FILE}"
-sed -i "s/%UPF_N3_IP/${UPF_N3_IP}/g" "${CONFIG_FILE}"
-sed -i "s/%DN_POOL/${DN_POOL}/g" "${CONFIG_FILE}"
-sed -i "s/%DNN/${DNN}/g" "${CONFIG_FILE}"
-sed -i "s/%SD/${DNN}/g" "${CONFIG_FILE}"
-sed -i "s/%SST/${SST}/g" "${CONFIG_FILE}"
-
-
+cat "${CONFIG_FILE}"
