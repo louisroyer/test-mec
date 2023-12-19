@@ -1,5 +1,5 @@
 hooks:
-  pre-init-hook: /config/routing-rr.sh
+  pre-init-hook: pre-init-hook.sh
 debug: true
 locator: "fd00:2::/32"
 endpoints:

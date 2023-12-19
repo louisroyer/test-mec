@@ -40,7 +40,7 @@ x-srv6: &srv6
     build:
       context: ./nextmn-srv6-ctrl
       args:
-        NEXTMNSRCTRL_RELEASE: v0.0.1
+        NEXTMNSRCTRL_RELEASE: v0.0.2
     image: nextmn-srv6-ctrl
     command: ["-c", "/etc/nextmn-srv6-ctrl/config.yaml"]
     container_name: nextmn-srv6-ctrl
@@ -49,6 +49,9 @@ x-srv6: &srv6
       - ./config/templates/config-nextmn-srv6-ctrl.yaml:/etc/nextmn-srv6-ctrl/config-template.yaml:ro
       - ./config/templates/scripts/config-nextmn-srv6-ctrl.sh:/usr/local/bin/config.sh:ro
     environment:
+      TEMPLATE: "/etc/nextmn-srv6-ctrl/config-template.yaml"
+      CONFIG_FILE: "/etc/nextmn-srv6-ctrl/config.yaml"
+      CONFIG_SCRIPT: "config.sh"
       N4_IP: {{ "10.0.%d.%d" | format(networks.n4.subnet_id, slices.srv6.n4_upf_id) }}
     networks:
       n4:

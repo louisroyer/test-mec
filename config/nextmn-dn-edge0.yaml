@@ -1,8 +1,8 @@
 hooks:
-  pre-init-hook: /config/routing-r1.sh
+  pre-init-hook: pre-init-hook.sh
 debug: true
 ipv4-headend-prefix: "10.0.1.0/24" # handle packets with this destination
-linux-headend-set-source-address: "fd00:3:1:0A00:0401:04D2::0030" # from : fd00:4:1::/48 + 10.0.3.1 port 1234
+linux-headend-set-source-address: "fd00:3:1:0A00:0301:04D2::0030" # from : fd00:3:1::/48 + 10.0.3.1 port 1234
 headends:
   - name: "downlink"
     to: "10.0.1.0/24"
@@ -12,11 +12,11 @@ headends:
       - bsid:
           segments-list:
             - "fd00:2:1::"
-            - "fd00:1:1:0A00:0401:0000:0000:0200" # to 10.0.4.1 TEID 2 = 0A 00 04 01 |00| 00 00 00 02
+            - "fd00:1:1:0A00:0401:0000:0000:0100" # to 10.0.4.1 TEID 1 = 0A 00 04 01 |00| 00 00 00 01
 
-locator: "fd00:4::/32"
+locator: "fd00:3::/32"
 endpoints:
-  - prefix: "fd00:4:1::/48"
+  - prefix: "fd00:3:1::/48"
     provider: "Linux"
     behavior: "End.DX4"
 
