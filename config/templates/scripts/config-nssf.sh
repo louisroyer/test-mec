@@ -19,7 +19,7 @@ if [ -z "$SUPPORTED_NSSAIS" ]; then
 	exit 1
 fi
 
-
+IFS=$'\n'
 # Supported NSSAI
 SUPPORTED_NSSAIS_SUB_INDENT8=""
 for NSSAI in ${SUPPORTED_NSSAIS}; do
@@ -40,7 +40,7 @@ for NSI in ${SUPPORTED_NSSAIS}; do
 	if [ -n "${NSI}" ]; then
 		case ${NSI} in
 		-*)
-			NSI_LIST_SUB="${NSI_LIST_SUB}\n      nsiInformationList:\n        - nrfId: http://%NRF/nnrf-nfm/v1/nf-instances\n    ${NSI}" 
+			NSI_LIST_SUB="${NSI_LIST_SUB}\n      nsiInformationList:\n        - nrfId: http://${NRF}/nnrf-nfm/v1/nf-instances\n    ${NSI}" 
 			;;
 		*)
 			NSI_LIST_SUB="${NSI_LIST_SUB}\n    ${NSI}" 
@@ -50,12 +50,24 @@ for NSI in ${SUPPORTED_NSSAIS}; do
 	fi
 done
 
-cp "${TEMPLATE}" "${CONFIG_FILE}"
-sed -i "s/%BINDING_IP/${BINDING_IP}/g" "${CONFIG_FILE}"
-sed -i "s/%REGISTER_IP/${REGISTER_IP}/g" "${CONFIG_FILE}"
-sed -i "s/%BINDING_PORT/${BINDING_PORT:8000}/g" "${CONFIG_FILE}"
-sed -i "s/%NRF/${NRF}/g" "${CONFIG_FILE}"
-sed -i "s/%SUPPORTED_NSSAIS_INDENT8/${SUPPORTED_NSSAIS_SUB_INDENT8}/g" "${CONFIG_FILE}"
-sed -i "s/%SUPPORTED_NSSAIS_INDENT12/${SUPPORTED_NSSAIS_SUB_INDENT12}/g" "${CONFIG_FILE}"
-sed -i "s/%NSI_LIST/${NSI_LIST_SUB}/g" "${CONFIG_FILE}"
+awk \
+	-v SUPPORTED_NSSAIS_SUB_INDENT8="${SUPPORTED_NSSAIS_SUB_INDENT8}" \
+	-v SUPPORTED_NSSAIS_INDENT12="${SUPPORTED_NSSAIS_SUB_INDENT12}" \
+	-v BINDING_IP="${BINDING_IP}" \
+	-v REGISTER_IP="${REGISTER_IP}" \
+	-v BINDING_PORT="${BINDING_PORT:-8000}" \
+	-v NRF="${NRF}" \
+	-v NSI_LIST="${NSI_LIST_SUB}" \
+	'{
+		sub(/%SUPPORTED_NSSAIS_INDENT8/, SUPPORTED_NSSAIS_SUB_INDENT8);
+		sub(/%SUPPORTED_NSSAIS_INDENT12/, SUPPORTED_NSSAIS_SUB_INDENT12);
+		sub(/%BINDING_IP/, BINDING_IP);
+		sub(/%REGISTER_IP/, REGISTER_IP);
+		sub(/%BINDING_PORT/, BINDING_PORT);
+		sub(/%NRF/, NRF);
+		sub(/%NSI_LIST/, NSI_LIST_SUB);
+		print;
+	}' \
+	"${TEMPLATE}" > "${CONFIG_FILE}"
 
+cat "${CONFIG_FILE}"

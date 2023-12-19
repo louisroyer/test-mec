@@ -23,5 +23,5 @@ sed -i "s/%MONGO_PORT/${MONGO_PORT:-27017}/g" "${CONFIG_FILE}"
 sed -i "s/%MONGO_HOST/${MONGO_HOST:-free5gc}/g" "${CONFIG_FILE}"
 sed -i "s/%BINDING_IP/${BINDING_IP}/g" "${CONFIG_FILE}"
 sed -i "s/%REGISTER_IP/${REGISTER_IP}/g" "${CONFIG_FILE}"
-sed -i "s/%BINDING_PORT/${BINDING_PORT:8000}/g" "${CONFIG_FILE}"
+sed -i "s/%BINDING_PORT/${BINDING_PORT:-8000}/g" "${CONFIG_FILE}"
 

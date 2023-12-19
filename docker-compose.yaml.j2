@@ -208,7 +208,7 @@ x-f5gc: &f5gc
       MNC: "01"
       AMF_ID: "000001"
       AMF_NAME: "AMF"
-      NRF_URI: "http://nrf.sbi-net:8000"
+      NRF_URI: "http://nrf.sbi:8000"
       DNN_LIST: "{% for slice in slices %}{{ slice }}{% if not loop.last %} {% endif %}{% endfor %}"
       SST_LIST: "{% for slice in slices %}{{ "%d" | format(slices[slice].nssai.sst) }}{% if not loop.last %} {% endif %}{% endfor %}"
       SD_LIST: "{% for slice in slices %}{{ "%06x" | format(slices[slice].nssai.sd) }}{% if not loop.last %} {% endif %}{% endfor %}"

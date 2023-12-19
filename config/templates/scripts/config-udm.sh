@@ -20,7 +20,7 @@ fi
 cp "${TEMPLATE}" "${CONFIG_FILE}"
 sed -i "s/%BINDING_IP/${BINDING_IP}/g" "${CONFIG_FILE}"
 sed -i "s/%REGISTER_IP/${REGISTER_IP}/g" "${CONFIG_FILE}"
-sed -i "s/%BINDING_PORT/${BINDING_PORT:8000}/g" "${CONFIG_FILE}"
+sed -i "s/%BINDING_PORT/${BINDING_PORT:-8000}/g" "${CONFIG_FILE}"
 sed -i "s/%NRF/${NRF}/g" "${CONFIG_FILE}"
 
 
