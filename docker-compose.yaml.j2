@@ -25,11 +25,11 @@ x-nextmn-srv6: &nextmn-srv6
   cap_add:
     - NET_ADMIN
   sysctls:
-    - net.ipv6.conf.all.disable_ipv6=0
-    - net.ipv4.ip_forward=1
-    - net.ipv6.conf.all.forwarding=1
-    - net.ipv6.conf.all.seg6_enabled=1
-    - net.ipv6.conf.default.seg6_enabled=1
+    - "net.ipv6.conf.all.disable_ipv6=0"
+    - "net.ipv4.ip_forward=1"
+    - "net.ipv6.conf.all.forwarding=1"
+    - "net.ipv6.conf.all.seg6_enabled=1"
+    - "net.ipv6.conf.default.seg6_enabled=1"
   command: ["-c", "/etc/nextmn-srv6/config.yaml"]
   devices:
     - "/dev/net/tun:/dev/net/tun"
@@ -57,7 +57,7 @@ x-srv6: &srv6
       n4:
         ipv4_address: {{ "10.0.%d.%d" | format(networks.n4.subnet_id, slices.srv6.n4_upf_id) }}
 
-  {% for edge in services.srv6_router.dn -%}
+#~ for edge in services.srv6_router.dn
   {{ "nextmn-srv6-dn-%s" | format(edge.dnn) | with_debug | indent(2)}}
     <<: *nextmn-srv6
     container_name: nextmn-srv6-dn-{{ edge.dnn }}
@@ -72,7 +72,7 @@ x-srv6: &srv6
       dataplane:
         ipv4_address: {{ "10.0.%d.%d" | format(networks.dataplane.subnet_id, 129+2+loop.index) }}
         ipv6_address: {{ "fd00:0:0:0:%x:8000:0:%x" | format(networks.dataplane.subnet_id, 2+loop.index) }}
-  {% endfor %}
+#~ endfor
     
   {{ "nextmn-srgw" | with_debug | indent(2)}}
     <<: *nextmn-srv6
@@ -115,24 +115,25 @@ x-f5gc: &f5gc
     environment:
       MONGO_HOST: "mongodb-f5gc.db"
       SLICES: |-
-        {% for slice in slices %}- sst: {{ slices[slice].nssai.sst }}
+#~ for slice in slices
+        - sst: {{ slices[slice].nssai.sst }}
           sd: {{ '%06X' | format(slices[slice].nssai.sd) }}
           varqi: 9
           dnn: {{slice}}
-      {% endfor -%}
+#~ endfor
       IMSI: |-
-      {%- set ue = namespace(id=1) -%}
-      {%for slice in slices %}
+#~ set ue = namespace(id=1)
+#~ for slice in slices
         - imsi-00101{{"%010d" | format(ue.id) }}
-      {%- set ue.id = ue.id + 1 -%}
-      {% endfor %}
+#~   set ue.id = ue.id + 1
+#~ endfor
     networks:
         db:
   mongodb-f5gc:
     image: mongo
     container_name: mongodb-f5gc
     hostname: mongodb-f5gc
-    command: mongod --port 27017 --bind_ip_all
+    command: "mongod --port 27017 --bind_ip_all"
     restart: always
     networks:
       db:
@@ -170,7 +171,7 @@ x-f5gc: &f5gc
       SD: "{{ "%06X" | format(slices.srv6.nssai.sd) }}"
     cap_add:
       - NET_ADMIN
-    command: --config /etc/smf/config.yaml --uerouting /etc/smf/ue-routing.yaml
+    command: ["--config", "/etc/smf/config.yaml", "--uerouting", "/etc/smf/ue-routing.yaml"]
     networks:
       n4:
         ipv4_address: {{ "10.0.%d.1" | format(networks.n4.subnet_id) }}
@@ -192,11 +193,11 @@ x-f5gc: &f5gc
     volumes:
       - ./config/templates/config-amf.yaml:/etc/amf/config-template.yaml:ro
       - ./config/templates/scripts/config-amf.sh:/usr/local/bin/config.sh:ro
-    command: --config /etc/amf/config.yaml
+    command: ["--config", "/etc/amf/config.yaml"]
     cap_add:
       - NET_ADMIN
     sysctls:
-      - net.ipv6.conf.all.disable_ipv6=0
+      - "net.ipv6.conf.all.disable_ipv6=0"
     environment:
       TEMPLATE: "/etc/amf/config-template.yaml"
       CONFIG_FILE: "/etc/amf/config.yaml"
@@ -220,15 +221,15 @@ x-f5gc: &f5gc
       n2:
         ipv4_address: {{ "10.0.%d.%d" | format(networks.n2.subnet_id, 129+1) }}
 
-  {% for nf in ["nrf", "ausf", "n3iwf", "nssf", "pcf", "udm", "udr"] -%}
+#~ for nf in ["nrf", "ausf", "nssf", "pcf", "udm", "udr"]
   {{ nf }}:
     container_name: {{ nf }}
     hostname: {{ nf }}
     restart: always
-    {% if nf != "nrf" -%}
+#~   if nf != "nrf"
     depends_on:
       - nrf
-    {% endif -%}
+#~   endif
     build:
       context: ./free5gc
       target: free5gc-{{ nf }}
@@ -239,30 +240,32 @@ x-f5gc: &f5gc
       TEMPLATE: "/etc/{{ nf }}/config-template.yaml"
       CONFIG_FILE: "/etc/{{ nf }}/config.yaml"
       CONFIG_SCRIPT: "config.sh"
-      {% if nf != "nrf" -%}
+#~   if nf != "nrf"
       NRF: nrf.sbi:8000
-      {% endif -%}
-      {% if nf in ["nrf", "pcf", "udr"] -%}
+#~   endif
+#~   if nf in ["nrf", "pcf", "udr"]
       MONGO_HOST: "mongodb-free5gc.db"
-      {% endif -%}
+#~   endif
       BINDING_IP: {{ "10.0.%d.%d" | format(networks.sbi.subnet_id, 129+loop.index+2) }}
       REGISTER_IP: {{ nf }}.sbi
-      {%- if nf == "nssf" %}
+#~   if nf == "nssf"
       SUPPORTED_NSSAIS: |-
-        {%for slice in slices %}- sst: {{ slices[slice].nssai.sst }}
-          sd: {{ '%06X' | format(slices[slice].nssai.sd) }}{% endfor -%}
-      {% endif %}
+#~     for slice in slices
+        - sst: {{ slices[slice].nssai.sst }}
+          sd: {{ '%06X' | format(slices[slice].nssai.sd) }}
+#~     endfor
+#~   endif
     volumes:
         - ./config/templates/config-{{ nf }}.yaml:/etc/{{ nf }}/config-template.yaml:ro
         - ./config/templates/scripts/config-{{ nf }}.sh:/usr/local/bin/config.sh:ro
-    command: --config /etc/{{ nf }}/config.yaml
+    command: ["--config", "/etc/{{ nf }}/config.yaml"]
     networks:
       sbi:
         ipv4_address: {{ "10.0.%d.%d" | format(networks.sbi.subnet_id, 129+loop.index+2) }}
-      {% if nf in ["nrf", "pcf", "udr"] -%}
+#~   if nf in ["nrf", "pcf", "udr"]
       db:
-      {% endif %}
-  {% endfor %}
+#~   endif
+#~ endfor 
 
 
 
@@ -275,7 +278,7 @@ x-gnb-common: &gnb-common
   devices:
     - "/dev/net/tun:/dev/net/tun"
   sysctls:
-    - net.ipv6.conf.all.disable_ipv6=0
+    - "net.ipv6.conf.all.disable_ipv6=0"
   command: [" "]
 
 x-gnb-environment-common: &gnb-environment-common
@@ -290,7 +293,7 @@ x-gnb-environment-common: &gnb-environment-common
 
 # GNB
 x-gnb: &gnb
-  {%- for slice in slices %}
+#~ for slice in slices
   {{ "gnb%d" | format(loop.index) | with_debug | indent(2) }}
     <<: *gnb-common
     container_name: {{ "gnb%d" | format(loop.index) }}
@@ -315,7 +318,7 @@ x-gnb: &gnb
         ipv4_address: {{ "10.0.%d.%d" | format(networks.n2.subnet_id, 129 + loop.index + 1) }}
       n3:
         ipv4_address: {{ "10.0.%d.%d" | format(networks.n3.subnet_id, 129 + loop.index + 1) }}
-  {% endfor %}
+#~ endfor
 
 # USER EQUIPMENTS CONFIG
 x-socks: &socks
@@ -329,7 +332,7 @@ x-ue-environment-common: &ue-environment-common
   MCC: "001"
   MNC: "01"
 
-{%- for slice in slices %}
+#~ for slice in slices
 x-ue-environment-slice-{{ slice }}: &ue-environment-slice-{{ slice }}
   <<: *ue-environment-common
   GNBS: |-
@@ -347,7 +350,8 @@ x-ue-environment-slice-{{ slice }}: &ue-environment-slice-{{ slice }}
       slice:
         sst: {{ slices[slice].nssai.sst }}
         sd: {{ '%06X' | format(slices[slice].nssai.sd) }}
-{% endfor %}
+#~ endfor
+{# newline #}
 
 x-ue-common: &ue-common
   image: louisroyer/ueransim-ue
@@ -356,18 +360,19 @@ x-ue-common: &ue-common
   devices:
     - "/dev/net/tun:/dev/net/tun"
   sysctls:
-    - net.ipv6.conf.all.disable_ipv6=0
-  {# dns:
-    - {{ services.dns.service_id }} #}
+    - "net.ipv6.conf.all.disable_ipv6=0"
+  # dns:
+  #  - TODO {# {{ services.dns.service_id }} #}
+
   command: [" "]
   networks:
     ran: # automatic allocation for UEs
 
 x-ue: &user-equipments
   # USER EQUIPMENTS
-{%- set ue = namespace(id=1) -%}
-{%- for slice in slices -%}
-  {%- for _ in range(slices[slice].ue) %}
+#~ set ue = namespace(id=1)
+#~ for slice in slices
+#~   for _ in range(slices[slice].ue)
   {{ "ue%d" | format(ue.id) | with_debug | indent(2) }}
     <<: *ue-common
     container_name: ue{{ ue.id}}
@@ -376,20 +381,20 @@ x-ue: &user-equipments
       <<: *ue-environment-slice-{{ slice }}
       MSISDN: "000000000{{ ue.id }}"
   {{ "ue%d" | format(ue.id) | socks | indent(4) }}
-  {%- set ue.id = ue.id + 1 -%}
-  {# newline #}
-  {% endfor %}
-{% endfor %}
+#~     set ue.id = ue.id + 1 
+#~   endfor
+#~ endfor
+{# newline #}
 
 x-data-networks: &data-networks
   # DATA NETWORKS SERVICES
-  {%- for service in services %}
-    {%- for edge in services[service].dn %}
-    {%- if services[service].type != "srv6" %}
+#~ for service in services
+#~   for edge in services[service].dn
+#~     if services[service].type != "srv6"
   {{ "%s-%s" | format(service, edge.dnn) | with_debug | indent(2) }}
     container_name: {{ service }}-{{ edge.dnn }}
     hostname: {{ service }}-{{ edge.dnn }}
-    {% if services[service].type == "nginx" -%}
+#~       if services[service].type == "nginx"
     image: nginx
     volumes:
       - ./nginx/templates:/etc/nginx/templates:ro
@@ -401,7 +406,7 @@ x-data-networks: &data-networks
     networks:
       {{ edge.dnn }}:
         ipv4_address: {{ edge.ipv4 }} 
-    {%- else -%}{%- if services[service].type == "dns" -%}
+#~       elif services[service].type == "dns"
     init: true
     image: bind9
     build:
@@ -419,19 +424,27 @@ x-data-networks: &data-networks
     networks:
       {{ edge.dnn }}:
         ipv4_address: {{ edge.ipv4 }}
-
-    {%- endif %}{%- endif %}{%- endif %}
-    {% endfor %}
-  {% endfor %}
+#~       endif
+#~     endif
+#~   endfor
+#~ endfor
+{# newline #}
 
 services:
   <<: [*data-networks, *user-equipments, *gnb, *f5gc, *srv6]
 
 networks:
-  {% for net in networks -%}
+#~  for net in networks
+#~    if networks[net].enable_ipv6
   {{ '{
        "name": "%s",
        "ipv4_prefix": "10.0.%d.0/24",
        "ipv6_prefix": "fd00:0:0:0:%04x::/80"
-      }' | format(net, networks[net].subnet_id, networks[net].subnet_id) | network | indent(2) }}
-  {% endfor %}
+      }' | format(net, networks[net].subnet_id, networks[net].subnet_id) | network | indent(2) -}}
+#~    else
+  {{ '{
+       "name": "%s",
+       "ipv4_prefix": "10.0.%d.0/24"
+      }' | format(net, networks[net].subnet_id) | network | indent(2) -}}
+#~    endif
+#~  endfor
