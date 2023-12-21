@@ -71,7 +71,7 @@ x-srv6: &srv6
         ipv4_address: {{ edge.ipv4 }}
       dataplane:
         ipv4_address: {{ "10.0.%d.%d" | format(networks.dataplane.subnet_id, 129+2+loop.index) }}
-        ipv6_address: {{ "fd00:0:0:0:%x:8000:0:%x" | format(networks.dataplane.subnet_id, 2+loop.index) }}
+        ipv6_address: {{ "fd00:0:0:0:%x:8000:0:%x" | format(networks.dataplane.subnet_id, 1+2+loop.index) }}
 #~ endfor
     
   {{ "nextmn-srgw" | with_debug | indent(2)}}
@@ -87,7 +87,7 @@ x-srv6: &srv6
         ipv4_address: {{ "10.0.%d.%d" | format(networks.n3.subnet_id, 129+1) }}
       dataplane:
         ipv4_address: {{ "10.0.%d.%d" | format(networks.dataplane.subnet_id, 129+1) }}
-        ipv6_address: {{ "fd00:0:0:0:%x:8000:0:%x" | format(networks.dataplane.subnet_id, 1) }}
+        ipv6_address: {{ "fd00:0:0:0:%x:8000:0:%x" | format(networks.dataplane.subnet_id, 1+1) }}
 
   {{ "nextmn-rr" | with_debug | indent(2)}}
     <<: *nextmn-srv6
@@ -100,7 +100,7 @@ x-srv6: &srv6
     networks:
       dataplane:
         ipv4_address: {{ "10.0.%d.%d" | format(networks.dataplane.subnet_id, 129+2) }}
-        ipv6_address: {{ "fd00:0:0:0:%x:8000:0:%x" | format(networks.dataplane.subnet_id, 2) }}
+        ipv6_address: {{ "fd00:0:0:0:%x:8000:0:%x" | format(networks.dataplane.subnet_id, 1+2) }}
     
 # F5GC
 x-f5gc: &f5gc
@@ -159,7 +159,7 @@ x-f5gc: &f5gc
       TEMPLATE: "/etc/smf/config-template.yaml"
       CONFIG_FILE: "/etc/smf/config.yaml"
       CONFIG_SCRIPT: "config.sh"
-      BINDING_IP: {{ "10.0.%d.%d" | format(networks.sbi.subnet_id, 129+1) }}
+      BINDING_IP: {{ "10.0.%d.%d" | format(networks.sbi.subnet_id, 1) }}
       REGISTER_IP: smf.sbi
       NRF_URI: "http://nrf.sbi:8000"
       N4_IP: {{ "10.0.%d.1" | format(networks.n4.subnet_id) }}
@@ -244,7 +244,7 @@ x-f5gc: &f5gc
       NRF: nrf.sbi:8000
 #~   endif
 #~   if nf in ["nrf", "pcf", "udr"]
-      MONGO_HOST: "mongodb-free5gc.db"
+      MONGO_HOST: "mongodb-f5gc.db"
 #~   endif
       BINDING_IP: {{ "10.0.%d.%d" | format(networks.sbi.subnet_id, 129+loop.index+2) }}
       REGISTER_IP: {{ nf }}.sbi
@@ -301,19 +301,20 @@ x-gnb: &gnb
     volumes:
         - ./config/routing-gnb.sh:/usr/local/bin/routing.sh:ro
     environment:
+      <<: *gnb-environment-common
       NCI: {{ "%09x" | format(loop.index) }}
       ROUTING_SCRIPT: "routing.sh"
-      RLS_IP: "{{ "fd00:0:0:0:%x:8000:0:%4x" | format(networks.ran.subnet_id, loop.index) }}"
+      RLS_IP: "{{ "fd00:0:0:0:%x:8000:0:%04x" | format(networks.ran.subnet_id, loop.index) }}"
       #RLS_IP: "{{ "10.0.%d.%d" | format(networks.ran.subnet_id, 129 + loop.index) }}"
-      N2_IP: "10.0.213.2"
-      N3_IP: "10.0.201.2"
+      N2_IP: "{{ "10.0.%d.%d" | format(networks.n2.subnet_id, 129 + loop.index + 1) }}"
+      N3_IP: "{{ "10.0.%d.%d" | format(networks.n3.subnet_id, 129 + loop.index + 1) }}"
       SUPPORTED_NSSAIS: |-
         - sst: {{ slices[slice].nssai.sst }}
           sd: {{ "%06X" | format(slices[slice].nssai.sd) }}
     networks:
       ran:
         ipv4_address: {{ "10.0.%d.%d" | format(networks.ran.subnet_id, 129 + loop.index) }}
-        ipv6_address: {{ "fd00:0:0:0:%x:8000:0:%x" | format(networks.ran.subnet_id, loop.index) }}
+        ipv6_address: {{ "fd00:0:0:0:%x:8000:0:%x" | format(networks.ran.subnet_id, 1+loop.index) }}
       n2:
         ipv4_address: {{ "10.0.%d.%d" | format(networks.n2.subnet_id, 129 + loop.index + 1) }}
       n3:
